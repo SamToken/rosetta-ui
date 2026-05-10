@@ -75,7 +75,9 @@ export function RelancerButton({ result }: RelancerButtonProps) {
   if (!haspaths) {
     return (
       <Tooltip>
-        <TooltipTrigger>{button}</TooltipTrigger>
+        <TooltipTrigger render={<span className="inline-flex" />}>
+          {button}
+        </TooltipTrigger>
         <TooltipContent
           side="left"
           className="bg-slate-800 border-slate-700 text-slate-200 text-xs max-w-52"
