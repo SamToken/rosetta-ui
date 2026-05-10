@@ -1,11 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Play, Folder, Settings2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -17,7 +16,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
+import { Button } from "@/components/ui/button"
 import { startAudit } from "@/lib/api"
+
+const LS_KEY = "rosetta-last-path"
+
+const PRESETS = [
+  { label: "Windows WSL", path: "/mnt/c/wamp/www/Infocentre/astro/application/src/" },
+  { label: "NixOS", path: "/home/nixos/projects/astro/application/src/" },
+]
 
 export function JobLauncher() {
   const router = useRouter()
@@ -27,6 +34,14 @@ export function JobLauncher() {
   const [useLlm, setUseLlm] = useState(true)
   const [maxWorkers, setMaxWorkers] = useState(4)
 
+  // Charge le dernier chemin utilisé au premier ouverture
+  useEffect(() => {
+    if (open && !path) {
+      const saved = localStorage.getItem(LS_KEY)
+      if (saved) setPath(saved)
+    }
+  }, [open])
+
   const mutation = useMutation({
     mutationFn: () =>
       startAudit({
@@ -35,6 +50,7 @@ export function JobLauncher() {
         max_workers: maxWorkers,
       }),
     onSuccess: (data) => {
+      localStorage.setItem(LS_KEY, path.trim())
       queryClient.invalidateQueries({ queryKey: ["jobs"] })
       setOpen(false)
       toast.success(`Job ${data.job_id.slice(0, 8)}… lancé`, {
@@ -78,16 +94,35 @@ export function JobLauncher() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 mt-2">
           {/* Path */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="audit-path" className="text-xs text-slate-400 uppercase tracking-wide">
-              <Folder className="inline h-3.5 w-3.5 mr-1 mb-0.5" />
-              Chemin PHP
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="audit-path" className="text-xs text-slate-400 uppercase tracking-wide">
+                <Folder className="inline h-3.5 w-3.5 mr-1 mb-0.5" />
+                Chemin PHP
+              </Label>
+              {/* Presets */}
+              <div className="flex gap-1">
+                {PRESETS.map((p) => (
+                  <button
+                    key={p.label}
+                    type="button"
+                    onClick={() => setPath(p.path)}
+                    className={`text-xs px-2 py-0.5 rounded border transition-colors ${
+                      path === p.path
+                        ? "border-blue-500 bg-blue-600/20 text-blue-300"
+                        : "border-slate-700 text-slate-500 hover:border-slate-500 hover:text-slate-300"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <Input
               id="audit-path"
               value={path}
               onChange={(e) => setPath(e.target.value)}
-              placeholder="/home/nixos/projects/astro/application/src/…"
-              className="bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-600 focus-visible:ring-blue-500"
+              placeholder="/mnt/c/wamp/www/…"
+              className="bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-600 focus-visible:ring-blue-500 font-mono text-xs"
               autoComplete="off"
               spellCheck={false}
             />
