@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import {
   Table,
   TableBody,
@@ -24,6 +25,12 @@ interface JobsTableProps {
   jobs: Job[]
 }
 
+function RiskBadge({ score }: { score: number }) {
+  if (score >= 70) return <span className="text-[10px] text-green-500/70 font-medium">Faible</span>
+  if (score >= 40) return <span className="text-[10px] text-orange-500/70 font-medium">Modéré</span>
+  return <span className="text-[10px] text-red-500/70 font-medium">Critique</span>
+}
+
 export function JobsTable({ jobs }: JobsTableProps) {
   const router = useRouter()
 
@@ -41,12 +48,14 @@ export function JobsTable({ jobs }: JobsTableProps) {
           <TableHead className="text-right text-slate-400">Fichiers</TableHead>
           <TableHead className="text-right text-slate-400">Score</TableHead>
           <TableHead className="text-right text-slate-400">Coût</TableHead>
+          <TableHead className="text-slate-400 w-16"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {sorted.map((job) => {
           const hasLlmScore = job.result != null &&
             job.result.files.some(f => f.status !== "no_llm")
+          const hasBrief = job.status === "success" && hasLlmScore
 
           return (
             <TableRow
@@ -78,10 +87,13 @@ export function JobsTable({ jobs }: JobsTableProps) {
               </TableCell>
               <TableCell className="text-right">
                 {hasLlmScore ? (
-                  <span className={cn("text-sm font-semibold tabular-nums", healthColor(job.result!.health_score))}>
-                    {job.result!.health_score}
-                    <span className="text-slate-600">/100</span>
-                  </span>
+                  <div className="flex flex-col items-end gap-0">
+                    <span className={cn("text-sm font-semibold tabular-nums", healthColor(job.result!.health_score))}>
+                      {job.result!.health_score}
+                      <span className="text-slate-600">/100</span>
+                    </span>
+                    <RiskBadge score={job.result!.health_score} />
+                  </div>
                 ) : (
                   <span className="text-slate-600 text-sm">—</span>
                 )}
@@ -91,6 +103,16 @@ export function JobsTable({ jobs }: JobsTableProps) {
                   <CostDisplay usd={job.result.total_cost_usd} />
                 ) : (
                   <span className="text-slate-600">—</span>
+                )}
+              </TableCell>
+              <TableCell onClick={(e) => e.stopPropagation()}>
+                {hasBrief && (
+                  <Link
+                    href={`/jobs/${job.job_id}/brief`}
+                    className="text-xs text-blue-400 hover:text-blue-300 hover:underline whitespace-nowrap transition-colors"
+                  >
+                    Vue PO
+                  </Link>
                 )}
               </TableCell>
             </TableRow>
