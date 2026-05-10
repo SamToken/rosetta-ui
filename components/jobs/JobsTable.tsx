@@ -15,6 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Network } from "lucide-react"
 import { JobStatusBadge } from "@/components/jobs/JobStatusBadge"
 import { CostDisplay } from "@/components/shared/CostDisplay"
 import { formatDate, healthColor, truncate } from "@/lib/utils"
@@ -56,6 +57,7 @@ export function JobsTable({ jobs }: JobsTableProps) {
           const hasLlmScore = job.result != null &&
             job.result.files.some(f => f.status !== "no_llm")
           const hasBrief = job.status === "success" && hasLlmScore
+          const hasGraph = job.status === "success" && (job.result?.total_files ?? 0) >= 1
 
           return (
             <TableRow
@@ -106,14 +108,25 @@ export function JobsTable({ jobs }: JobsTableProps) {
                 )}
               </TableCell>
               <TableCell onClick={(e) => e.stopPropagation()}>
-                {hasBrief && (
-                  <Link
-                    href={`/jobs/${job.job_id}/brief`}
-                    className="text-xs text-blue-400 hover:text-blue-300 hover:underline whitespace-nowrap transition-colors"
-                  >
-                    Vue PO
-                  </Link>
-                )}
+                <div className="flex items-center gap-2">
+                  {hasBrief && (
+                    <Link
+                      href={`/jobs/${job.job_id}/brief`}
+                      className="text-xs text-blue-400 hover:text-blue-300 hover:underline whitespace-nowrap transition-colors"
+                    >
+                      Vue PO
+                    </Link>
+                  )}
+                  {hasGraph && (
+                    <Link
+                      href={`/jobs/${job.job_id}/graph`}
+                      className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 whitespace-nowrap transition-colors"
+                    >
+                      <Network className="h-3 w-3" />
+                      Graphe
+                    </Link>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           )

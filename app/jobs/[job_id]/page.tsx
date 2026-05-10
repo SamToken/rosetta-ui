@@ -78,7 +78,7 @@ export default function JobDetailPage({ params }: PageProps) {
           <JobStatusBadge status={job.status} />
         </div>
         <div className="flex items-center gap-2">
-          {job.status === "success" && job.result && job.result.files.length > 1 && (
+          {job.status === "success" && job.result && (
             <Link
               href={`/jobs/${job_id}/graph`}
               className="flex items-center gap-1.5 text-xs text-slate-400 border border-slate-700 rounded px-2.5 py-1.5 hover:bg-slate-800 hover:text-slate-200 transition-colors"
