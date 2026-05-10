@@ -108,6 +108,10 @@ export async function getJobDependencies(jobId: string): Promise<DependencyGraph
   return apiFetch<DependencyGraph>(`/audit/${jobId}/dependencies`)
 }
 
+export async function deleteJob(jobId: string): Promise<void> {
+  await apiFetch<void>(`/audit/${jobId}`, { method: "DELETE" })
+}
+
 // ── Job outputs ─────────────────────────────────────────────────────────────
 
 export async function getJobFiles(jobId: string): Promise<OutputFile[]> {
