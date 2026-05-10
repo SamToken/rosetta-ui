@@ -61,8 +61,12 @@ export async function startAudit(
   })
 }
 
-export async function getROI(): Promise<ROISummary> {
-  return apiFetch<ROISummary>("/audit/roi")
+export async function getROI(linesPerHour?: number, hourlyRate?: number): Promise<ROISummary> {
+  const params = new URLSearchParams()
+  if (linesPerHour !== undefined) params.set("lines_per_hour", String(linesPerHour))
+  if (hourlyRate !== undefined) params.set("hourly_rate", String(hourlyRate))
+  const qs = params.size > 0 ? `?${params}` : ""
+  return apiFetch<ROISummary>(`/audit/roi${qs}`)
 }
 
 // ── KB ─────────────────────────────────────────────────────────────────────

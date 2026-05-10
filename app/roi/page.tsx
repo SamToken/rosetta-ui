@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -9,15 +10,86 @@ import { getROI } from "@/lib/api"
 import { formatDuration } from "@/lib/utils"
 import type { ROISummary } from "@/lib/types"
 
+const LS_KEY_LPH = "rosetta-roi-lines-per-hour"
+const LS_KEY_RATE = "rosetta-roi-hourly-rate"
+
+function readLs(key: string, fallback: number): number {
+  if (typeof window === "undefined") return fallback
+  const v = localStorage.getItem(key)
+  return v ? Number(v) : fallback
+}
+
 export default function ROIPage() {
+  const [linesPerHour, setLinesPerHour] = useState<number>(() => readLs(LS_KEY_LPH, 1000))
+  const [hourlyRate, setHourlyRate] = useState<number>(() => readLs(LS_KEY_RATE, 75))
+
+  // Valeurs "appliquées" — séparées pour éviter un refetch à chaque frappe
+  const [appliedLph, setAppliedLph] = useState(linesPerHour)
+  const [appliedRate, setAppliedRate] = useState(hourlyRate)
+
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["roi"],
-    queryFn: getROI,
+    queryKey: ["roi", appliedLph, appliedRate],
+    queryFn: () => getROI(appliedLph, appliedRate),
   })
+
+  function applyParams() {
+    const lph = Math.max(100, Math.min(10000, linesPerHour))
+    const rate = Math.max(10, Math.min(500, hourlyRate))
+    setAppliedLph(lph)
+    setAppliedRate(rate)
+    setLinesPerHour(lph)
+    setHourlyRate(rate)
+    localStorage.setItem(LS_KEY_LPH, String(lph))
+    localStorage.setItem(LS_KEY_RATE, String(rate))
+  }
+
+  const isDirty = linesPerHour !== appliedLph || hourlyRate !== appliedRate
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold text-slate-100">Dashboard ROI</h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="text-xl font-semibold text-slate-100">Dashboard ROI</h1>
+
+        {/* Paramètres de calcul */}
+        <div className="flex items-center gap-3 flex-wrap justify-end">
+          <span className="text-xs text-slate-500 whitespace-nowrap">Hypothèses :</span>
+          <label className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-400 whitespace-nowrap">lignes/h</span>
+            <input
+              type="number"
+              min={100}
+              max={10000}
+              step={50}
+              value={linesPerHour}
+              onChange={(e) => setLinesPerHour(Number(e.target.value))}
+              onKeyDown={(e) => e.key === "Enter" && applyParams()}
+              className="w-20 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 tabular-nums focus:outline-none focus:border-blue-500"
+            />
+          </label>
+          <label className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-400 whitespace-nowrap">€/h</span>
+            <input
+              type="number"
+              min={10}
+              max={500}
+              step={5}
+              value={hourlyRate}
+              onChange={(e) => setHourlyRate(Number(e.target.value))}
+              onKeyDown={(e) => e.key === "Enter" && applyParams()}
+              className="w-16 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 tabular-nums focus:outline-none focus:border-blue-500"
+            />
+          </label>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={applyParams}
+            disabled={!isDirty}
+            className="h-7 px-3 text-xs border-slate-700 text-slate-300 hover:bg-slate-800 disabled:opacity-30"
+          >
+            Recalculer
+          </Button>
+        </div>
+      </div>
 
       {isLoading && <ROISkeleton />}
 
@@ -60,13 +132,13 @@ function ROIDashboard({ summary: s }: { summary: ROISummary }) {
           sub={`${s.avg_processing_seconds.toFixed(1)}s moy. / fichier`}
         />
         <KPICard
-          label="Heures humaines économisées"
+          label="Temps humain économisé"
           value={`${s.total_human_hours_saved.toFixed(1)} h`}
           sub={`@ ${s.lines_per_hour_constant.toLocaleString()} lignes/h`}
           highlight
         />
         <KPICard
-          label="Économie financière"
+          label="Économie estimée"
           value={`${s.financial_saving_eur.toFixed(0)} €`}
           sub={`@ ${s.hourly_rate_eur.toFixed(0)} €/h dev senior`}
           highlight
@@ -98,7 +170,8 @@ function ROIDashboard({ summary: s }: { summary: ROISummary }) {
       <p className="text-xs text-slate-600">
         Économie calculée sur la base de {s.lines_per_hour_constant.toLocaleString()} lignes/heure
         en revue manuelle × {s.hourly_rate_eur.toFixed(0)} €/h (développeur senior).
-        Le coût pipeline ne couvre que les appels LLM émis par Rosetta — les sessions Claude Code sont facturées séparément sur console.anthropic.com.
+        Modifie les hypothèses en haut à droite pour simuler différents scénarios.
+        Le coût pipeline ne couvre que les appels LLM émis par Rosetta — les sessions Claude Code sont facturées séparément.
         Données locales — aucune transmission externe.
       </p>
     </div>
