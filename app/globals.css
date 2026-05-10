@@ -156,3 +156,36 @@
     font-variant-numeric: tabular-nums;
   }
 }
+
+/* ── Impression PDF — /jobs/[id]/brief ───────────────────────────────────── */
+@media print {
+  /* Masquer nav, boutons, éléments cockpit */
+  nav, .no-print { display: none !important; }
+
+  /* Fond blanc, texte noir */
+  html, body { background: white !important; color: black !important; }
+  .dark { color-scheme: light; }
+
+  /* Adapter les cartes */
+  [class*="bg-slate"], [class*="bg-red-950"], [class*="bg-orange-950"], [class*="bg-green-950"] {
+    background: white !important;
+    border-color: #d1d5db !important;
+  }
+
+  /* Forcer les couleurs sémantiques à l'impression */
+  .text-red-400, [class*="text-red"] { color: #dc2626 !important; }
+  .text-orange-400, [class*="text-orange"] { color: #ea580c !important; }
+  .text-green-400, [class*="text-green"] { color: #16a34a !important; }
+  .text-slate-300, .text-slate-400, .text-slate-500 { color: #374151 !important; }
+  .text-slate-100, .text-slate-200 { color: #111827 !important; }
+  .text-blue-300, .text-blue-400 { color: #1d4ed8 !important; }
+
+  /* Prose inversée → lisible sur blanc */
+  .prose-invert { color: #111827 !important; }
+
+  /* Éviter les coupures au milieu d'un bloc */
+  section, .question-item { page-break-inside: avoid; }
+
+  /* Marges d'impression confortables */
+  @page { margin: 2cm; }
+}
