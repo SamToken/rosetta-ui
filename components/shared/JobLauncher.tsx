@@ -43,12 +43,14 @@ export function JobLauncher() {
   }, [open])
 
   const mutation = useMutation({
-    mutationFn: () =>
-      startAudit({
-        php_paths: [path.trim()],
+    mutationFn: () => {
+      const paths = path.split(",").map(p => p.trim()).filter(Boolean)
+      return startAudit({
+        php_paths: paths,
         no_llm: !useLlm,
         max_workers: maxWorkers,
-      }),
+      })
+    },
     onSuccess: (data) => {
       localStorage.setItem(LS_KEY, path.trim())
       queryClient.invalidateQueries({ queryKey: ["jobs"] })
@@ -65,9 +67,11 @@ export function JobLauncher() {
     },
   })
 
+  const validPaths = path.split(",").map(p => p.trim()).filter(Boolean)
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!path.trim()) return
+    if (validPaths.length === 0) return
     mutation.mutate()
   }
 
@@ -97,7 +101,7 @@ export function JobLauncher() {
             <div className="flex items-center justify-between">
               <Label htmlFor="audit-path" className="text-xs text-slate-400 uppercase tracking-wide">
                 <Folder className="inline h-3.5 w-3.5 mr-1 mb-0.5" />
-                Chemin PHP
+                Chemins PHP <span className="normal-case text-slate-600 ml-1">(séparés par virgule)</span>
               </Label>
               {/* Presets */}
               <div className="flex gap-1">
@@ -121,7 +125,7 @@ export function JobLauncher() {
               id="audit-path"
               value={path}
               onChange={(e) => setPath(e.target.value)}
-              placeholder="/mnt/c/wamp/www/…"
+              placeholder="/mnt/c/…/Controller.php, /mnt/c/…/Service.php"
               className="bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-600 focus-visible:ring-blue-500 font-mono text-xs"
               autoComplete="off"
               spellCheck={false}
@@ -170,7 +174,7 @@ export function JobLauncher() {
           {/* Submit */}
           <Button
             type="submit"
-            disabled={!path.trim() || mutation.isPending}
+            disabled={validPaths.length === 0 || mutation.isPending}
             className="bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 mt-1"
           >
             {mutation.isPending ? (
