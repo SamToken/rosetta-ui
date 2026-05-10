@@ -80,9 +80,12 @@ function ROIDashboard({ summary: s }: { summary: ROISummary }) {
           value={formatDuration(s.total_machine_seconds)}
         />
         <MetricCard
-          label="Coût LLM total"
+          label="Coût pipeline Rosetta"
           value={`$${s.total_llm_cost_usd.toFixed(4)}`}
-          valueClass="text-yellow-400"
+          valueClass="text-slate-100"
+          badge="API"
+          badgeClass="bg-yellow-500/15 text-yellow-400 border border-yellow-500/30"
+          sub="hors sessions Claude Code"
         />
         <MetricCard
           label="Taux de succès"
@@ -95,6 +98,7 @@ function ROIDashboard({ summary: s }: { summary: ROISummary }) {
       <p className="text-xs text-slate-600">
         Économie calculée sur la base de {s.lines_per_hour_constant.toLocaleString()} lignes/heure
         en revue manuelle × {s.hourly_rate_eur.toFixed(0)} €/h (développeur senior).
+        Le coût pipeline ne couvre que les appels LLM émis par Rosetta — les sessions Claude Code sont facturées séparément sur console.anthropic.com.
         Données locales — aucune transmission externe.
       </p>
     </div>
@@ -129,10 +133,16 @@ function MetricCard({
   label,
   value,
   valueClass = "text-slate-200",
+  badge,
+  badgeClass,
+  sub,
 }: {
   label: string
   value: string
   valueClass?: string
+  badge?: string
+  badgeClass?: string
+  sub?: string
 }) {
   return (
     <Card className="bg-slate-900 border-slate-800">
@@ -142,7 +152,15 @@ function MetricCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="pb-4">
-        <span className={`text-xl font-bold tabular-nums ${valueClass}`}>{value}</span>
+        <div className="flex items-baseline gap-2">
+          <span className={`text-xl font-bold tabular-nums ${valueClass}`}>{value}</span>
+          {badge && (
+            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${badgeClass}`}>
+              {badge}
+            </span>
+          )}
+        </div>
+        {sub && <p className="text-xs text-slate-600 mt-1">{sub}</p>}
       </CardContent>
     </Card>
   )

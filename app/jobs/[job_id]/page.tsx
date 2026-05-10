@@ -24,6 +24,8 @@ interface PageProps {
 export default function JobDetailPage({ params }: PageProps) {
   const { job_id } = use(params)
 
+  const [activeTab, setActiveTab] = useState("terminal")
+
   const { data: job, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["job", job_id],
     queryFn: () => getJob(job_id),
@@ -57,7 +59,6 @@ export default function JobDetailPage({ params }: PageProps) {
 
   const showHeatmap = job.result != null && job.result.files.length > 1
   const showOutputs = job.status === "success" && job.result != null
-  const [activeTab, setActiveTab] = useState("terminal")
   const isOutputs = activeTab === "outputs"
 
   return (
@@ -150,7 +151,7 @@ export default function JobDetailPage({ params }: PageProps) {
 
             {showOutputs && (
               <TabsContent value="outputs" className="mt-3">
-                <OutputsTab jobId={job_id} />
+                <OutputsTab jobId={job_id} result={job.result!} />
               </TabsContent>
             )}
           </Tabs>
