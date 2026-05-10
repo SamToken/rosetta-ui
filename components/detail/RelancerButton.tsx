@@ -20,19 +20,20 @@ export function RelancerButton({ result }: RelancerButtonProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  if (!isNoLlmJob(result) || result.php_paths.length === 0) return null
+  const phpPaths = result.php_paths ?? []
+  if (!isNoLlmJob(result) || phpPaths.length === 0) return null
 
   const mutation = useMutation({
     mutationFn: () =>
       startAudit({
-        php_paths: result.php_paths,
+        php_paths: phpPaths,
         no_llm: false,
-        max_workers: Math.min(result.php_paths.length, 4),
+        max_workers: Math.min(phpPaths.length, 4),
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] })
       toast.success("Job LLM lancé", {
-        description: `${result.php_paths.length} fichier(s) en file`,
+        description: `${phpPaths.length} fichier(s) en file`,
       })
       router.push(`/jobs/${data.job_id}`)
     },
