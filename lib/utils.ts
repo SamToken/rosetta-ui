@@ -37,6 +37,10 @@ export function truncate(str: string, max: number): string {
   return str.length <= max ? str : `…${str.slice(-(max - 1))}`
 }
 
+export function truncateStart(str: string, max: number): string {
+  return str.length <= max ? str : `${str.slice(0, max - 1)}…`
+}
+
 // ── Health score ───────────────────────────────────────────────────────────
 
 export type HealthLevel = "high" | "medium" | "low"

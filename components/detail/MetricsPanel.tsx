@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { formatDuration, truncate } from "@/lib/utils"
+import { formatDuration, truncateStart } from "@/lib/utils"
 import { FlagChips } from "@/components/detail/FlagChips"
 import type { AuditJobResult } from "@/lib/types"
 
@@ -30,7 +30,7 @@ function MetricRow({
 }
 
 export function MetricsPanel({ result }: MetricsPanelProps) {
-  const truncatedDir = truncate(result.output_dir, 40)
+  const truncatedDir = truncateStart(result.output_dir, 40)
 
   return (
     <Card className="bg-slate-900 border-slate-800 h-full">
