@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
+import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -11,6 +12,7 @@ import { JobLauncher } from "@/components/shared/JobLauncher"
 import { RefreshCw } from "lucide-react"
 
 export default function JobsPage() {
+  const router = useRouter()
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["jobs"],
     queryFn: getJobs,
@@ -68,9 +70,10 @@ export default function JobsPage() {
       )}
 
       {!isLoading && !isError && data && data.length > 0 && (
-        <div className="rounded-md border border-slate-800 overflow-hidden">
-          <JobsTable jobs={data} />
-        </div>
+        <JobsTable
+          jobs={data}
+          onRowClick={(job) => router.push(`/jobs/${job.job_id}`)}
+        />
       )}
     </div>
   )
