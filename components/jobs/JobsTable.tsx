@@ -150,13 +150,14 @@ export function JobsTable({ jobs, onRowClick }: JobsTableProps) {
         cell: ({ row }) => {
           const job = row.original
           const hasLlm = job.result != null && job.result.files.some(f => f.status !== "no_llm")
-          if (!hasLlm) return <span className="text-slate-600 text-sm">—</span>
+          const score = job.result?.health_score
+          if (!hasLlm || score == null) return <span className="text-slate-600 text-sm">—</span>
           return (
             <div className="flex flex-col items-end gap-0">
-              <span className={cn("text-sm font-semibold tabular-nums", healthColor(job.result!.health_score))}>
-                {job.result!.health_score}<span className="text-slate-600">/100</span>
+              <span className={cn("text-sm font-semibold tabular-nums", healthColor(score))}>
+                {score}<span className="text-slate-600">/100</span>
               </span>
-              <RiskBadge score={job.result!.health_score} />
+              <RiskBadge score={score} />
             </div>
           )
         },

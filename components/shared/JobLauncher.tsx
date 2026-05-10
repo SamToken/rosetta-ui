@@ -12,7 +12,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
@@ -44,9 +43,8 @@ export function JobLauncher() {
 
   const mutation = useMutation({
     mutationFn: () => {
-      const paths = path.split(",").map(p => p.trim()).filter(Boolean)
       return startAudit({
-        php_paths: paths,
+        php_paths: validPaths,
         no_llm: !useLlm,
         max_workers: maxWorkers,
       })
@@ -67,7 +65,8 @@ export function JobLauncher() {
     },
   })
 
-  const validPaths = path.split(",").map(p => p.trim()).filter(Boolean)
+  // Split par virgule OU newline, trim, déduplique les vides
+  const validPaths = path.split(/[,\n]/).map(p => p.trim()).filter(Boolean)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -87,7 +86,7 @@ export function JobLauncher() {
         Nouvel audit
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md bg-slate-900 border-slate-700 text-slate-100">
+      <DialogContent className="sm:max-w-lg bg-slate-900 border-slate-700 text-slate-100">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-slate-100">
             <Settings2 className="h-4 w-4 text-blue-400" />
@@ -101,7 +100,7 @@ export function JobLauncher() {
             <div className="flex items-center justify-between">
               <Label htmlFor="audit-path" className="text-xs text-slate-400 uppercase tracking-wide">
                 <Folder className="inline h-3.5 w-3.5 mr-1 mb-0.5" />
-                Chemins PHP <span className="normal-case text-slate-600 ml-1">(séparés par virgule)</span>
+                Chemins PHP <span className="normal-case text-slate-600 ml-1">(un par ligne ou séparés par virgule)</span>
               </Label>
               {/* Presets */}
               <div className="flex gap-1">
@@ -121,15 +120,21 @@ export function JobLauncher() {
                 ))}
               </div>
             </div>
-            <Input
+            <textarea
               id="audit-path"
               value={path}
               onChange={(e) => setPath(e.target.value)}
-              placeholder="/mnt/c/…/Controller.php, /mnt/c/…/Service.php"
-              className="bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-600 focus-visible:ring-blue-500 font-mono text-xs"
+              placeholder={"/mnt/c/…/RetablirCloturerController.php\n/mnt/c/…/RetablirCloturerIhmService.php\n/mnt/c/…/RetablirCloturerForm.php"}
+              rows={4}
+              className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
               autoComplete="off"
               spellCheck={false}
             />
+            {validPaths.length > 0 && (
+              <p className="text-xs text-slate-500 tabular-nums">
+                {validPaths.length} chemin{validPaths.length > 1 ? "s" : ""} détecté{validPaths.length > 1 ? "s" : ""}
+              </p>
+            )}
           </div>
 
           {/* LLM toggle */}

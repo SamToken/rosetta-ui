@@ -19,7 +19,7 @@ export type AuditJobResult = {
   total_insights: number
   total_cost_usd: number
   processing_time_seconds: number
-  health_score: number
+  health_score: number | null
   output_dir: string
   php_paths?: string[]
   files: FileSummary[]

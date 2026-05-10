@@ -86,7 +86,7 @@ interface CriticalityBannerProps {
 }
 
 function CriticalityBanner({ result, pendingCount }: CriticalityBannerProps) {
-  const score = result.health_score
+  const score = result.health_score ?? 0
   const flagsTotal = result.files.reduce((s, f) => s + f.flags_total, 0)
 
   const level =
