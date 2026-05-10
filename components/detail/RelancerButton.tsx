@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { startAudit } from "@/lib/api"
 import type { AuditJobResult } from "@/lib/types"
 
@@ -20,8 +25,10 @@ export function RelancerButton({ result }: RelancerButtonProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
 
+  if (!isNoLlmJob(result)) return null
+
   const phpPaths = result.php_paths ?? []
-  if (!isNoLlmJob(result) || phpPaths.length === 0) return null
+  const haspaths = phpPaths.length > 0
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -44,12 +51,12 @@ export function RelancerButton({ result }: RelancerButtonProps) {
     },
   })
 
-  return (
+  const button = (
     <Button
       size="sm"
-      onClick={() => mutation.mutate()}
-      disabled={mutation.isPending}
-      className="bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50"
+      onClick={() => haspaths && mutation.mutate()}
+      disabled={!haspaths || mutation.isPending}
+      className="bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-40"
     >
       {mutation.isPending ? (
         <span className="flex items-center gap-2">
@@ -64,4 +71,20 @@ export function RelancerButton({ result }: RelancerButtonProps) {
       )}
     </Button>
   )
+
+  if (!haspaths) {
+    return (
+      <Tooltip>
+        <TooltipTrigger>{button}</TooltipTrigger>
+        <TooltipContent
+          side="left"
+          className="bg-slate-800 border-slate-700 text-slate-200 text-xs max-w-52"
+        >
+          Chemin non stocké — utilise &quot;Nouvel audit&quot; avec LLM activé
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return button
 }
