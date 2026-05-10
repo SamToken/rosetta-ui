@@ -6,11 +6,14 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
   type ColumnDef,
   type SortingState,
+  type ColumnFiltersState,
+  type FilterFn,
   flexRender,
 } from "@tanstack/react-table"
-import { ChevronUp, ChevronDown, ChevronsUpDown, Network } from "lucide-react"
+import { ChevronUp, ChevronDown, ChevronsUpDown, Network, CalendarSearch, X } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -74,6 +77,15 @@ function SortIcon({ sorted }: { sorted: false | "asc" | "desc" }) {
   return <ChevronDown className="h-3 w-3 inline-block ml-1 text-slate-300" />
 }
 
+// Filtre date : la valeur de la colonne est l'ISO string de created_at
+const dateRangeFilter: FilterFn<Job> = (row, columnId, filterValue: [string, string]) => {
+  const [from, to] = filterValue
+  const val = row.getValue<string>(columnId).slice(0, 10) // YYYY-MM-DD
+  if (from && val < from) return false
+  if (to && val > to) return false
+  return true
+}
+
 interface JobsTableProps {
   jobs: Job[]
   onRowClick?: (job: Job) => void
@@ -83,6 +95,25 @@ export function JobsTable({ jobs, onRowClick }: JobsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([
     { id: "created_at", desc: true },
   ])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
+
+  function applyDateFilter(from: string, to: string) {
+    setColumnFilters(prev => {
+      const without = prev.filter(f => f.id !== "created_at")
+      if (!from && !to) return without
+      return [...without, { id: "created_at", value: [from, to] }]
+    })
+  }
+
+  function clearDates() {
+    setDateFrom("")
+    setDateTo("")
+    applyDateFilter("", "")
+  }
+
+  const hasDateFilter = dateFrom || dateTo
 
   const columns = useMemo<ColumnDef<Job>[]>(
     () => [
@@ -118,6 +149,7 @@ export function JobsTable({ jobs, onRowClick }: JobsTableProps) {
         accessorFn: row => row.created_at,
         enableSorting: true,
         sortingFn: "datetime",
+        filterFn: dateRangeFilter,
         cell: ({ row }) => (
           <span className="text-sm text-slate-400">{formatDate(row.original.created_at)}</span>
         ),
@@ -217,14 +249,50 @@ export function JobsTable({ jobs, onRowClick }: JobsTableProps) {
   const table = useReactTable({
     data: jobs,
     columns,
-    state: { sorting },
+    state: { sorting, columnFilters },
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
   })
+
+  const totalRows = table.getPreFilteredRowModel().rows.length
+  const filteredRows = table.getFilteredRowModel().rows.length
 
   return (
     <div className="rounded-md border border-slate-800 overflow-hidden">
+      {/* Barre filtre date */}
+      <div className="flex items-center gap-3 px-3 py-2.5 border-b border-slate-800 bg-slate-900/50 flex-wrap">
+        <CalendarSearch className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={e => { setDateFrom(e.target.value); applyDateFilter(e.target.value, dateTo) }}
+            className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-600 [color-scheme:dark]"
+          />
+          <span className="text-slate-600 text-xs">→</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={e => { setDateTo(e.target.value); applyDateFilter(dateFrom, e.target.value) }}
+            className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-600 [color-scheme:dark]"
+          />
+        </div>
+        {hasDateFilter && (
+          <button
+            onClick={clearDates}
+            className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            <X className="h-3 w-3" />
+            Effacer
+          </button>
+        )}
+        <span className="ml-auto text-xs text-slate-600 tabular-nums">
+          {filteredRows}/{totalRows} jobs
+        </span>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
