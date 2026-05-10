@@ -162,7 +162,7 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
               ) : (
                 filtered.map(entry => (
                   <tr
-                    key={entry.code}
+                    key={`${entry.section}::${entry.code}`}
                     className="border-b border-slate-800/60 hover:bg-slate-800/30 transition-colors cursor-pointer"
                     onClick={() => onEdit(entry)}
                   >
