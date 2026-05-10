@@ -124,6 +124,18 @@ export type OutputFile = {
   path: string
 }
 
+export type KBEntry = {
+  code: string
+  label: string
+  domaine: string
+  confiance: "high" | "medium" | "inferred"
+  section: string
+  notes: string
+  source: string
+  pending_questions: number
+  lie_a: string[]
+}
+
 export type JobCreatedResponse = {
   job_id: string
   status: "queued"

@@ -1,14 +1,19 @@
 "use client"
 
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { KBStatsCard } from "@/components/kb/KBStatsCard"
+import { KBEntriesTable } from "@/components/kb/KBEntriesTable"
 import { CaptureForm } from "@/components/kb/CaptureForm"
 import { getKBStats } from "@/lib/api"
+import type { KBEntry } from "@/lib/types"
 
 export default function KBPage() {
+  const [editEntry, setEditEntry] = useState<KBEntry | null>(null)
+
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["kb-stats"],
     queryFn: getKBStats,
@@ -49,7 +54,19 @@ export default function KBPage() {
 
       {data && <KBStatsCard stats={data} />}
 
-      <CaptureForm />
+      {/* Entrées KB navigables — clic → pré-remplit CaptureForm */}
+      <div className="flex flex-col gap-2">
+        <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wide">
+          Entrées KB
+        </h2>
+        <KBEntriesTable onEdit={setEditEntry} />
+      </div>
+
+      {/* Formulaire — pré-rempli si editEntry, vide sinon */}
+      <CaptureForm
+        editEntry={editEntry}
+        onClearEdit={() => setEditEntry(null)}
+      />
     </div>
   )
 }

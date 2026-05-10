@@ -4,6 +4,7 @@ import type {
   CaptureResponse,
   Job,
   JobCreatedResponse,
+  KBEntry,
   KBStats,
   OutputFile,
   PendingItem,
@@ -73,6 +74,10 @@ export async function getROI(linesPerHour?: number, hourlyRate?: number): Promis
 
 export async function getKBStats(): Promise<KBStats> {
   return apiFetch<KBStats>("/kb/stats")
+}
+
+export async function getKBEntries(): Promise<KBEntry[]> {
+  return apiFetch<KBEntry[]>("/kb/entries")
 }
 
 export async function getKBPending(): Promise<PendingItem[]> {
