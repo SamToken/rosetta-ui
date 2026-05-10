@@ -164,12 +164,16 @@ export default function GraphPage() {
   }, [data])
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
-  const [edges, , onEdgesChange] = useEdgesState(rfEdges)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges)
   const [selected, setSelected] = useState<DepNode | null>(null)
 
   useEffect(() => {
     setNodes(initialNodes)
   }, [initialNodes, setNodes])
+
+  useEffect(() => {
+    setEdges(rfEdges)
+  }, [rfEdges, setEdges])
 
   const onNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {
