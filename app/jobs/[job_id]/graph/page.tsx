@@ -141,20 +141,27 @@ export default function GraphPage() {
     [data]
   )
 
-  const rfEdges: Edge[] = useMemo(
-    () =>
-      (data?.edges ?? []).map((e, i) => ({
+  const rfEdges: Edge[] = useMemo(() => {
+    const EDGE_COLOR: Record<string, string> = {
+      service:       "#60a5fa", // blue-400  — injection de service (animée)
+      instantiation: "#fb923c", // orange-400 — new ClassName()
+      use:           "#94a3b8", // slate-400  — use/import
+    }
+    return (data?.edges ?? []).map((e, i) => {
+      const color = EDGE_COLOR[e.dep_type] ?? EDGE_COLOR.use
+      return {
         id: `e${i}`,
         source: e.source,
         target: e.target,
         label: e.dep_type !== "use" ? e.dep_type : undefined,
-        labelStyle: { fontSize: 9, fill: "#64748b" },
-        style: { stroke: "#334155", strokeWidth: 1.5 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: "#334155", width: 12, height: 12 },
+        labelStyle: { fontSize: 9, fill: color, fontFamily: "JetBrains Mono, monospace" },
+        labelBgStyle: { fill: "#0f172a", fillOpacity: 0.85 },
+        style: { stroke: color, strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color, width: 14, height: 14 },
         animated: e.dep_type === "service",
-      })),
-    [data]
-  )
+      }
+    })
+  }, [data])
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, , onEdgesChange] = useEdgesState(rfEdges)
