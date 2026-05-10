@@ -1,6 +1,6 @@
 "use client"
 
-import { use } from "react"
+import { use, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -57,6 +57,8 @@ export default function JobDetailPage({ params }: PageProps) {
 
   const showHeatmap = job.result != null && job.result.files.length > 1
   const showOutputs = job.status === "success" && job.result != null
+  const [activeTab, setActiveTab] = useState("terminal")
+  const isOutputs = activeTab === "outputs"
 
   return (
     <div className="flex flex-col gap-6">
@@ -93,8 +95,8 @@ export default function JobDetailPage({ params }: PageProps) {
         </Alert>
       )}
 
-      {/* Layout deux colonnes */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Layout adaptatif — 4 colonnes en mode Outputs pour plus d'espace */}
+      <div className={`grid grid-cols-1 gap-6 ${isOutputs ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
         {/* Panneau gauche — métriques */}
         <div className="md:col-span-1">
           {job.result ? (
@@ -104,9 +106,9 @@ export default function JobDetailPage({ params }: PageProps) {
           )}
         </div>
 
-        {/* Panneau droit — terminal + heatmap */}
-        <div className="md:col-span-2">
-          <Tabs defaultValue="terminal" className="h-full">
+        {/* Panneau droit — terminal + heatmap + outputs */}
+        <div className={isOutputs ? "md:col-span-3" : "md:col-span-2"}>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
             <TabsList className="bg-slate-900 border border-slate-800">
               <TabsTrigger
                 value="terminal"
