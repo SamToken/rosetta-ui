@@ -31,6 +31,12 @@ export function CaptureForm({ editEntry, onClearEdit }: CaptureFormProps) {
 
   const isEditMode = editEntry != null
 
+  const canSuggestHigh =
+    isEditMode &&
+    form.confiance !== "high" &&
+    form.source.toLowerCase().includes("po validé") &&
+    !/[Àà]\s*valider\s*PO\s*:/i.test(form.notes ?? "")
+
   // Quand une entrée est passée depuis la table, pré-remplir le formulaire
   useEffect(() => {
     if (editEntry) {
@@ -103,6 +109,20 @@ export function CaptureForm({ editEntry, onClearEdit }: CaptureFormProps) {
           </p>
         )}
       </CardHeader>
+      {canSuggestHigh && (
+        <div className="mx-6 mb-0 rounded-md border border-green-500/30 bg-green-500/10 px-4 py-2.5 flex items-center justify-between gap-3">
+          <p className="text-xs text-green-400">
+            ✓ Source PO validée · aucune question en suspens — prêt pour <span className="font-semibold">high</span>.
+          </p>
+          <button
+            type="button"
+            onClick={() => setForm(f => ({ ...f, confiance: "high" }))}
+            className="shrink-0 text-xs font-medium text-green-300 border border-green-500/40 rounded px-2.5 py-1 hover:bg-green-500/20 transition-colors"
+          >
+            Passer à high →
+          </button>
+        </div>
+      )}
       <CardContent>
         <form
           onSubmit={(e) => {
