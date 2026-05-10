@@ -26,7 +26,8 @@ export function formatDuration(seconds: number): string {
 
 export function formatCost(usd: number): string {
   if (usd === 0) return "gratuit"
-  return `$${usd.toFixed(4)}`
+  const formatted = usd.toFixed(2)
+  return formatted === "0.00" ? "gratuit" : `$${formatted}`
 }
 
 export function formatLines(n: number): string {

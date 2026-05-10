@@ -48,9 +48,16 @@ function FilesCell({ job }: { job: Job }) {
 
   if (names.length === 1) {
     return (
-      <span className="font-mono text-xs text-slate-300 truncate max-w-[160px] block">
-        {names[0]}
-      </span>
+      <Tooltip>
+        <TooltipTrigger className="text-left">
+          <span className="font-mono text-xs text-slate-300 truncate max-w-[160px] block">
+            {names[0]}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-slate-200 text-xs font-mono max-w-xs break-all">
+          {paths[0]}
+        </TooltipContent>
+      </Tooltip>
     )
   }
 
@@ -191,15 +198,33 @@ export function JobsTable({ jobs, onRowClick }: JobsTableProps) {
     },
     {
       id: "total_files",
-      header: "N",
-      accessorFn: row => row.result?.total_files ?? 0,
+      header: () => (
+        <Tooltip>
+          <TooltipTrigger>
+            <span className="cursor-help border-b border-dotted border-slate-600">N</span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-slate-800 border-slate-700 text-slate-200 text-xs">
+            Nombre de fichiers scannés
+          </TooltipContent>
+        </Tooltip>
+      ),
+      accessorFn: row => row.result?.total_files ?? -1,
       enableSorting: true,
       meta: { align: "right" },
-      cell: ({ row }) => (
-        <span className="text-sm text-slate-300 tabular-nums">
-          {row.original.result?.total_files ?? "—"}
-        </span>
-      ),
+      cell: ({ row }) => {
+        if (!row.original.result) {
+          return (
+            <span className="text-xs text-slate-600 italic" title="Scan importé avant Rosetta Cockpit">
+              ancien
+            </span>
+          )
+        }
+        return (
+          <span className="text-sm text-slate-300 tabular-nums">
+            {row.original.result.total_files}
+          </span>
+        )
+      },
     },
     {
       id: "health_score",
