@@ -35,7 +35,8 @@ const PROSE_PO = [
   "[&_table]:w-full [&_table]:text-sm [&_table]:border-collapse",
   "[&_thead_tr]:bg-slate-800/70",
   "[&_th]:border [&_th]:border-slate-700 [&_th]:px-3 [&_th]:py-2 [&_th]:text-slate-300 [&_th]:text-left [&_th]:font-medium",
-  "[&_td]:border [&_td]:border-slate-800 [&_td]:px-3 [&_td]:py-2 [&_td]:text-slate-300 [&_td]:align-top [&_td]:leading-relaxed",
+  "[&_td]:border [&_td]:border-slate-800 [&_td]:px-3 [&_td]:py-2 [&_td]:text-slate-300 [&_td]:align-top [&_td]:leading-relaxed [&_td]:break-words [&_td]:whitespace-normal",
+  "[&_td_code]:whitespace-pre-wrap [&_td_p]:my-0",
   "[&_tbody_tr:hover_td]:bg-slate-800/25",
 ].join(" ")
 

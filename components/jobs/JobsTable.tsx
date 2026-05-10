@@ -77,10 +77,10 @@ function SortIcon({ sorted }: { sorted: false | "asc" | "desc" }) {
   return <ChevronDown className="h-3 w-3 inline-block ml-1 text-slate-300" />
 }
 
-// Filtre date : la valeur de la colonne est l'ISO string de created_at
+// Filtre date+heure : compare les ISO strings (YYYY-MM-DDTHH:MM >= from, <= to)
 const dateRangeFilter: FilterFn<Job> = (row, columnId, filterValue: [string, string]) => {
   const [from, to] = filterValue
-  const val = row.getValue<string>(columnId).slice(0, 10) // YYYY-MM-DD
+  const val = row.getValue<string>(columnId).slice(0, 16) // YYYY-MM-DDTHH:MM
   if (from && val < from) return false
   if (to && val > to) return false
   return true
@@ -267,14 +267,14 @@ export function JobsTable({ jobs, onRowClick }: JobsTableProps) {
         <CalendarSearch className="h-3.5 w-3.5 text-slate-500 shrink-0" />
         <div className="flex items-center gap-2">
           <input
-            type="date"
+            type="datetime-local"
             value={dateFrom}
             onChange={e => { setDateFrom(e.target.value); applyDateFilter(e.target.value, dateTo) }}
             className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-600 [color-scheme:dark]"
           />
           <span className="text-slate-600 text-xs">→</span>
           <input
-            type="date"
+            type="datetime-local"
             value={dateTo}
             onChange={e => { setDateTo(e.target.value); applyDateFilter(dateFrom, e.target.value) }}
             className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-600 [color-scheme:dark]"
