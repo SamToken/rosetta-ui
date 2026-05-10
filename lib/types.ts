@@ -21,6 +21,7 @@ export type AuditJobResult = {
   processing_time_seconds: number
   health_score: number
   output_dir: string
+  php_paths: string[]
   files: FileSummary[]
 }
 

@@ -10,6 +10,7 @@ import { JobStatusBadge } from "@/components/jobs/JobStatusBadge"
 import { MetricsPanel } from "@/components/detail/MetricsPanel"
 import { LiveTerminal } from "@/components/detail/LiveTerminal"
 import { HeatmapGrid } from "@/components/detail/HeatmapGrid"
+import { RelancerButton } from "@/components/detail/RelancerButton"
 import { getJob } from "@/lib/api"
 import { formatDate, truncate } from "@/lib/utils"
 import { ArrowLeft } from "lucide-react"
@@ -59,17 +60,22 @@ export default function JobDetailPage({ params }: PageProps) {
   return (
     <div className="flex flex-col gap-6">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-3">
-        <Link
-          href="/jobs"
-          className="flex items-center gap-1 text-sm text-slate-400 hover:text-slate-200 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Jobs
-        </Link>
-        <span className="text-slate-700">/</span>
-        <span className="font-mono text-xs text-slate-400">{truncate(job_id, 20)}</span>
-        <JobStatusBadge status={job.status} />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/jobs"
+            className="flex items-center gap-1 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Jobs
+          </Link>
+          <span className="text-slate-700">/</span>
+          <span className="font-mono text-xs text-slate-400">{truncate(job_id, 20)}</span>
+          <JobStatusBadge status={job.status} />
+        </div>
+        {job.status === "success" && job.result && (
+          <RelancerButton result={job.result} />
+        )}
       </div>
 
       {/* Méta */}
