@@ -32,13 +32,22 @@ const PROSE_PO = [
   "prose-blockquote:border-l-blue-500 prose-blockquote:text-slate-300 prose-blockquote:bg-blue-950/20 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r prose-blockquote:not-italic",
   "prose-code:text-blue-300 prose-code:bg-slate-800/80 prose-code:px-1 prose-code:rounded prose-code:text-sm",
   "prose-code:before:content-none prose-code:after:content-none",
-  "[&_table]:w-full [&_table]:text-sm [&_table]:border-collapse",
+  "[&_table]:w-full [&_table]:text-sm [&_table]:border-collapse [&_table]:table-fixed",
   "[&_thead_tr]:bg-slate-800/70",
-  "[&_th]:border [&_th]:border-slate-700 [&_th]:px-3 [&_th]:py-2 [&_th]:text-slate-300 [&_th]:text-left [&_th]:font-medium",
-  "[&_td]:border [&_td]:border-slate-800 [&_td]:px-3 [&_td]:py-2 [&_td]:text-slate-300 [&_td]:align-top [&_td]:leading-relaxed [&_td]:break-words [&_td]:whitespace-normal",
+  "[&_th]:border [&_th]:border-slate-700 [&_th]:px-3 [&_th]:py-2 [&_th]:text-slate-300 [&_th]:text-left [&_th]:font-medium [&_th]:!whitespace-normal",
+  "[&_td]:border [&_td]:border-slate-800 [&_td]:px-3 [&_td]:py-2 [&_td]:text-slate-300 [&_td]:align-top [&_td]:leading-relaxed [&_td]:!break-words [&_td]:!whitespace-normal [&_td]:!overflow-visible",
   "[&_td_code]:whitespace-pre-wrap [&_td_p]:my-0",
   "[&_tbody_tr:hover_td]:bg-slate-800/25",
 ].join(" ")
+
+// ── ReactMarkdown — table scrollable ──────────────────────────────────────
+const MD_COMPONENTS = {
+  table: ({ children, ...props }: React.TableHTMLAttributes<HTMLTableElement>) => (
+    <div className="overflow-x-auto w-full">
+      <table {...props}>{children}</table>
+    </div>
+  ),
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -149,7 +158,7 @@ function ExecutiveSummary({ content }: { content: string }) {
         Résumé exécutif
       </p>
       <div className={PROSE_PO}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{summary}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>{summary}</ReactMarkdown>
       </div>
     </div>
   )
@@ -312,7 +321,7 @@ export default function BriefPage({ params }: PageProps) {
                   <div className="flex-1 h-px bg-slate-800" />
                 </div>
                 <div className={PROSE_PO}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
                     {result.data}
                   </ReactMarkdown>
                 </div>
