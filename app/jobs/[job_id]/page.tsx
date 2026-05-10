@@ -14,7 +14,7 @@ import { RelancerButton } from "@/components/detail/RelancerButton"
 import { OutputsTab } from "@/components/detail/OutputsTab"
 import { getJob } from "@/lib/api"
 import { formatDate, truncate } from "@/lib/utils"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Network } from "lucide-react"
 import Link from "next/link"
 
 interface PageProps {
@@ -77,9 +77,20 @@ export default function JobDetailPage({ params }: PageProps) {
           <span className="font-mono text-xs text-slate-400">{truncate(job_id, 20)}</span>
           <JobStatusBadge status={job.status} />
         </div>
-        {job.status === "success" && job.result && (
-          <RelancerButton result={job.result} />
-        )}
+        <div className="flex items-center gap-2">
+          {job.status === "success" && job.result && job.result.files.length > 1 && (
+            <Link
+              href={`/jobs/${job_id}/graph`}
+              className="flex items-center gap-1.5 text-xs text-slate-400 border border-slate-700 rounded px-2.5 py-1.5 hover:bg-slate-800 hover:text-slate-200 transition-colors"
+            >
+              <Network className="h-3.5 w-3.5" />
+              Graphe
+            </Link>
+          )}
+          {job.status === "success" && job.result && (
+            <RelancerButton result={job.result} />
+          )}
+        </div>
       </div>
 
       {/* Méta */}

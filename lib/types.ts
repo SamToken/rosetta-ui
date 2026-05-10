@@ -142,6 +142,26 @@ export type JobCreatedResponse = {
   message: string
 }
 
+export type DepNode = {
+  id: string
+  label: string
+  file_type: "controller" | "service" | "unknown"
+  flags: number
+  confidence: number
+  file_path: string
+}
+
+export type DepEdge = {
+  source: string
+  target: string
+  dep_type: string
+}
+
+export type DependencyGraph = {
+  nodes: DepNode[]
+  edges: DepEdge[]
+}
+
 export type AuditStartRequest = {
   php_paths: string[]
   no_llm?: boolean

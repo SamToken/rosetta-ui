@@ -2,6 +2,7 @@ import type {
   AuditStartRequest,
   CaptureRequest,
   CaptureResponse,
+  DependencyGraph,
   Job,
   JobCreatedResponse,
   KBEntry,
@@ -101,6 +102,10 @@ export async function validatePending(
     method: "POST",
     body: JSON.stringify(payload),
   })
+}
+
+export async function getJobDependencies(jobId: string): Promise<DependencyGraph> {
+  return apiFetch<DependencyGraph>(`/audit/${jobId}/dependencies`)
 }
 
 // ── Job outputs ─────────────────────────────────────────────────────────────
