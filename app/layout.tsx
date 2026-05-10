@@ -1,13 +1,13 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { Navbar } from "@/components/shared/Navbar"
 import { Providers } from "@/app/providers"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] })
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] })
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] })
+const jetbrainsMono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Rosetta Cockpit",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${geistSans.variable} ${geistMono.variable} dark`}>
+    <html lang="fr" className={`${inter.variable} ${jetbrainsMono.variable} dark`}>
       {/*
         Dégradé radial : éclat bleu centré en haut → fond midnight vers slate-950.
         Donne de la profondeur sans alourdir la lisibilité.
