@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { formatDuration, truncate } from "@/lib/utils"
+import { FlagChips } from "@/components/detail/FlagChips"
 import type { AuditJobResult } from "@/lib/types"
 
 interface MetricsPanelProps {
@@ -76,6 +77,8 @@ export function MetricsPanel({ result }: MetricsPanelProps) {
             </TooltipContent>
           </Tooltip>
         </MetricRow>
+
+        <FlagChips files={result.files} />
       </CardContent>
     </Card>
   )

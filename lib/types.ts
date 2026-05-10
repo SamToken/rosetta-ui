@@ -8,6 +8,7 @@ export type FileSummary = {
   file_size_lines: number
   processing_time_seconds: number
   flags_total: number
+  flag_types: Record<string, number>
   insights_total: number
   llm_cost_usd: number
   status: FileSummaryStatus
