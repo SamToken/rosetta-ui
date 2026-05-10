@@ -5,6 +5,7 @@ import type {
   Job,
   JobCreatedResponse,
   KBStats,
+  OutputFile,
   PendingItem,
   ROISummary,
   ValidatePendingRequest,
@@ -91,4 +92,18 @@ export async function validatePending(
     method: "POST",
     body: JSON.stringify(payload),
   })
+}
+
+// ── Job outputs ─────────────────────────────────────────────────────────────
+
+export async function getJobFiles(jobId: string): Promise<OutputFile[]> {
+  return apiFetch<OutputFile[]>(`/audit/${jobId}/files`)
+}
+
+export async function getJobFile(jobId: string, path: string): Promise<string> {
+  const res = await fetch(
+    `${API_BASE}/audit/${jobId}/file?path=${encodeURIComponent(path)}`,
+  )
+  if (!res.ok) throw new ApiError(res.status, await res.text())
+  return res.text()
 }

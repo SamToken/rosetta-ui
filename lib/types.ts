@@ -119,6 +119,11 @@ export type ValidatePendingResponse = {
   error: string | null
 }
 
+export type OutputFile = {
+  label: string
+  path: string
+}
+
 export type JobCreatedResponse = {
   job_id: string
   status: "queued"

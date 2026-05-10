@@ -11,6 +11,7 @@ import { MetricsPanel } from "@/components/detail/MetricsPanel"
 import { LiveTerminal } from "@/components/detail/LiveTerminal"
 import { HeatmapGrid } from "@/components/detail/HeatmapGrid"
 import { RelancerButton } from "@/components/detail/RelancerButton"
+import { OutputsTab } from "@/components/detail/OutputsTab"
 import { getJob } from "@/lib/api"
 import { formatDate, truncate } from "@/lib/utils"
 import { ArrowLeft } from "lucide-react"
@@ -54,8 +55,8 @@ export default function JobDetailPage({ params }: PageProps) {
 
   if (!job) return null
 
-  const showHeatmap =
-    job.result != null && job.result.files.length > 1
+  const showHeatmap = job.result != null && job.result.files.length > 1
+  const showOutputs = job.status === "success" && job.result != null
 
   return (
     <div className="flex flex-col gap-6">
@@ -121,6 +122,14 @@ export default function JobDetailPage({ params }: PageProps) {
                   Heatmap ({job.result!.files.length} fichiers)
                 </TabsTrigger>
               )}
+              {showOutputs && (
+                <TabsTrigger
+                  value="outputs"
+                  className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400"
+                >
+                  Outputs
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="terminal" className="mt-3">
@@ -134,6 +143,12 @@ export default function JobDetailPage({ params }: PageProps) {
             {showHeatmap && (
               <TabsContent value="heatmap" className="mt-3">
                 <HeatmapGrid files={job.result!.files} />
+              </TabsContent>
+            )}
+
+            {showOutputs && (
+              <TabsContent value="outputs" className="mt-3">
+                <OutputsTab jobId={job_id} />
               </TabsContent>
             )}
           </Tabs>
