@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { JobsTable } from "@/components/jobs/JobsTable"
 import { getJobs } from "@/lib/api"
 import { hasActiveJobs } from "@/lib/utils"
+import { JobLauncher } from "@/components/shared/JobLauncher"
 import { RefreshCw } from "lucide-react"
 
 export default function JobsPage() {
@@ -23,15 +24,18 @@ export default function JobsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-slate-100">Jobs d&apos;audit</h1>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          className="border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
-        >
-          <RefreshCw className="mr-2 h-3.5 w-3.5" />
-          Actualiser
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            className="border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+          >
+            <RefreshCw className="mr-2 h-3.5 w-3.5" />
+            Actualiser
+          </Button>
+          <JobLauncher />
+        </div>
       </div>
 
       {isLoading && <JobsTableSkeleton />}
@@ -56,11 +60,9 @@ export default function JobsPage() {
 
       {!isLoading && !isError && data && data.length === 0 && (
         <div className="rounded-md border border-slate-800 bg-slate-900 px-6 py-12 text-center">
-          <p className="text-slate-400 text-sm">
-            Aucun audit lancé.
-          </p>
+          <p className="text-slate-400 text-sm">Aucun audit lancé.</p>
           <p className="text-slate-600 text-xs mt-1">
-            Commencez par <code className="bg-slate-800 px-1 rounded">POST /audit/start</code>
+            Cliquez sur <span className="text-blue-400">Nouvel audit</span> pour démarrer.
           </p>
         </div>
       )}

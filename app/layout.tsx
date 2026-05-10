@@ -4,6 +4,7 @@ import "./globals.css"
 import { Navbar } from "@/components/shared/Navbar"
 import { Providers } from "@/app/providers"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { Toaster } from "@/components/ui/sonner"
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] })
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] })
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TooltipProvider>
             <Navbar />
             <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
+            <Toaster theme="dark" richColors />
           </TooltipProvider>
         </Providers>
       </body>
