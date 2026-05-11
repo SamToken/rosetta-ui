@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/tooltip"
 import { JobStatusBadge } from "@/components/jobs/JobStatusBadge"
 import { CostDisplay } from "@/components/shared/CostDisplay"
-import { flagsColor, formatDuration, formatLines, truncate } from "@/lib/utils"
+import { flagsColor, formatDuration, formatLines } from "@/lib/utils"
 import type { FileSummary, FileSummaryStatus } from "@/lib/types"
 
 interface HeatmapGridProps {
@@ -38,27 +38,27 @@ export function HeatmapGrid({ files }: HeatmapGridProps) {
       <div
         className="grid gap-2 p-1"
         style={{
-          gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
         }}
       >
         {files.map((file) => {
           const bg = flagsColor(file.flags_total)
-          const shortName = truncate(file.filename.replace(/\.php$/, ""), 14)
+          const name = file.filename.replace(/\.php$/, "")
 
           return (
             <Tooltip key={file.filename}>
               <TooltipTrigger
                 onClick={() => setSelected(file)}
-                className="flex flex-col items-start gap-0.5 rounded p-2 text-left transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="flex flex-col items-start gap-1 rounded p-3 text-left transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 style={{ backgroundColor: bg }}
               >
-                <span className="truncate w-full text-xs font-semibold text-black/80">
-                  {shortName}
+                <span className="w-full text-xs font-semibold text-black/80 break-words leading-tight">
+                  {name}
                 </span>
-                <span className="text-[10px] text-black/70">
+                <span className="text-[11px] text-black/70">
                   {file.flags_total} flags
                 </span>
-                <span className="text-[10px] text-black/60">
+                <span className="text-[11px] text-black/60">
                   {formatLines(file.file_size_lines)} L
                 </span>
               </TooltipTrigger>
