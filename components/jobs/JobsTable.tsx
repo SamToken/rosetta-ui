@@ -80,11 +80,17 @@ function SortIcon({ sorted }: { sorted: false | "asc" | "desc" }) {
   return <ChevronDown className="h-3 w-3 inline-block ml-1 text-slate-300" />
 }
 
+function toLocalDate(iso: string): string {
+  // Convertit un timestamp UTC stocké en DB vers YYYY-MM-DD local
+  const d = new Date(iso)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
 const dateRangeFilter: FilterFn<Job> = (row, columnId, filterValue: [string, string]) => {
   const [from, to] = filterValue
-  const val = row.getValue<string>(columnId).slice(0, 16)
+  const val = toLocalDate(row.getValue<string>(columnId))   // YYYY-MM-DD local
   if (from && val < from) return false
-  if (to && val > to) return false
+  if (to   && val > to)   return false
   return true
 }
 
@@ -363,16 +369,32 @@ export function JobsTable({ jobs, onRowClick }: JobsTableProps) {
         </div>
         <div className="w-px h-4 bg-slate-700 shrink-0" />
         <CalendarSearch className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-        <div className="flex items-center gap-2">
-          <input type="datetime-local" value={dateFrom}
+        <div className="flex items-center gap-2 flex-wrap">
+          <input type="date" value={dateFrom}
             onChange={e => { setDateFrom(e.target.value); applyDateFilter(e.target.value, dateTo) }}
             className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-600 [color-scheme:dark]"
           />
           <span className="text-slate-600 text-xs">→</span>
-          <input type="datetime-local" value={dateTo}
+          <input type="date" value={dateTo}
             onChange={e => { setDateTo(e.target.value); applyDateFilter(dateFrom, e.target.value) }}
             className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-600 [color-scheme:dark]"
           />
+          <button
+            onClick={() => {
+              const today = toLocalDate(new Date().toISOString())
+              setDateFrom(today); setDateTo(today); applyDateFilter(today, today)
+            }}
+            className="text-[10px] text-slate-500 border border-slate-700 rounded px-1.5 py-0.5 hover:text-slate-300 hover:border-slate-500 transition-colors whitespace-nowrap"
+          >Aujourd'hui</button>
+          <button
+            onClick={() => {
+              const today = toLocalDate(new Date().toISOString())
+              const d = new Date(); d.setDate(d.getDate() - 6)
+              const week = toLocalDate(d.toISOString())
+              setDateFrom(week); setDateTo(today); applyDateFilter(week, today)
+            }}
+            className="text-[10px] text-slate-500 border border-slate-700 rounded px-1.5 py-0.5 hover:text-slate-300 hover:border-slate-500 transition-colors whitespace-nowrap"
+          >7 jours</button>
           {hasDateFilter && (
             <button onClick={clearDates}
               className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors">
