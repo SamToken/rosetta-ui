@@ -29,8 +29,10 @@ interface PageProps {
 
 // ── Coût et durée estimés ──────────────────────────────────────────────────
 
-const COST_PER_FILE_USD  = 0.08
-const MIN_PER_FLAG       = 0.10  // calibré : 120 flags ≈ 12 min réel
+const COST_PER_LINE_USD  = 0.000672  // $0.00056 réel × 1.2 marge — calibré sur jobs réels
+const COST_PER_FLAG_USD  = 0.006     // fallback : ~$0.00056/ligne × ~11 lignes/flag moyen × 1.2
+const COST_UNKNOWN_FILE  = 0.50     // fallback si aucun FileSummary disponible
+const MIN_PER_FLAG       = 0.15     // conservateur : 120 flags → ~18 min affiché (réel ~11 min)
 
 const RE_TO_ENRICH_JOB = /→\s*À enrichir en KB\s*:\s*(.+)/i
 const RE_TOKEN_JOB     = /(\w+)\((\d+)[x×]\)/g
@@ -76,15 +78,24 @@ function LLMConfirmModal({
   onCancel: () => void
   isPending: boolean
 }) {
-  const n = modal.paths.length
-  const costEst = (n * COST_PER_FILE_USD).toFixed(2)
-  const durMin  = (() => {
+  const n        = modal.paths.length
+  const workers  = Math.min(n, 4)
+  const costEst  = (() => {
+    const fromFiles = modal.files.reduce((sum, f) => {
+      if (f.file_size_lines > 0) return sum + f.file_size_lines * COST_PER_LINE_USD
+      return sum + f.flags_total * COST_PER_FLAG_USD
+    }, 0)
+    const unknown = n - modal.files.length
+    return (fromFiles + unknown * COST_UNKNOWN_FILE).toFixed(2)
+  })()
+  const totalMin = (() => {
     const fromFiles = modal.files.reduce(
-      (sum, f) => sum + Math.max(1, Math.ceil(f.flags_total * MIN_PER_FLAG)), 0
+      (sum, f) => sum + Math.max(2, Math.ceil(f.flags_total * MIN_PER_FLAG)), 0
     )
     const unknown = n - modal.files.length
-    return fromFiles + unknown * 2
+    return fromFiles + unknown * 3
   })()
+  const durMin   = Math.ceil(totalMin / workers)  // temps mur avec N workers parallèles
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
@@ -97,28 +108,44 @@ function LLMConfirmModal({
         {/* Liste fichiers */}
         <div className="rounded-md border border-slate-800 overflow-hidden max-h-52 overflow-y-auto">
           <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-slate-800 bg-slate-800/50">
+                <th className="px-3 py-1.5 text-left text-[10px] text-slate-500 uppercase tracking-wide font-medium">Fichier</th>
+                <th className="px-3 py-1.5 text-right text-[10px] text-slate-500 uppercase tracking-wide font-medium">Flags — Lignes</th>
+                <th className="px-3 py-1.5 text-right text-[10px] text-slate-500 uppercase tracking-wide font-medium">~Coût</th>
+              </tr>
+            </thead>
             <tbody>
-              {modal.files.map(f => (
-                <tr key={f.filename} className="border-b border-slate-800/60">
-                  <td className="px-3 py-2 font-mono text-slate-200 truncate max-w-[200px]">
-                    {f.filename.replace(/\.php$/, "")}
-                  </td>
-                  <td className="px-3 py-2 text-right tabular-nums font-semibold" style={{ color: flagsColor(f.flags_total) }}>
-                    {f.flags_total}
-                  </td>
-                  <td className="px-3 py-2 text-slate-500">{riskLabel(f.flags_total)}</td>
-                </tr>
-              ))}
-              {/* Fichiers sans FileSummary (chemin connu mais pas dans les files) */}
+              {modal.files.map(f => {
+                const fileCost = f.file_size_lines > 0
+                  ? f.file_size_lines * COST_PER_LINE_USD
+                  : f.flags_total * COST_PER_FLAG_USD
+                return (
+                  <tr key={f.filename} className="border-b border-slate-800/60">
+                    <td className="px-3 py-2 font-mono text-slate-200 truncate max-w-[180px]">
+                      {f.filename.replace(/\.php$/, "")}
+                    </td>
+                    <td className="px-3 py-2 text-right tabular-nums text-slate-400">
+                      <span className="font-semibold" style={{ color: flagsColor(f.flags_total) }}>{f.flags_total}</span>
+                      {f.file_size_lines > 0 && (
+                        <span className="text-slate-600"> — {f.file_size_lines} l.</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-right tabular-nums text-slate-400">
+                      ~${fileCost.toFixed(2)}
+                    </td>
+                  </tr>
+                )
+              })}
               {modal.paths.filter(p =>
                 !modal.files.some(f => p === f.filename || p.endsWith("/" + f.filename))
               ).map(p => (
                 <tr key={p} className="border-b border-slate-800/60">
-                  <td className="px-3 py-2 font-mono text-slate-400 truncate max-w-[200px]">
+                  <td className="px-3 py-2 font-mono text-slate-400 truncate max-w-[180px]">
                     {p.split("/").pop()?.replace(/\.php$/, "") ?? p}
                   </td>
-                  <td className="px-3 py-2" />
-                  <td className="px-3 py-2" />
+                  <td className="px-3 py-2 text-right text-slate-600">—</td>
+                  <td className="px-3 py-2 text-right text-slate-600">~$0.50</td>
                 </tr>
               ))}
             </tbody>
@@ -134,6 +161,7 @@ function LLMConfirmModal({
           <div>
             <p className="text-xs text-slate-500 uppercase tracking-wide">Durée estimée</p>
             <p className="text-slate-200 font-semibold">~{durMin} min</p>
+            <p className="text-[11px] text-slate-600 mt-0.5">{workers} workers · ~{totalMin} min cumulé</p>
           </div>
         </div>
 
