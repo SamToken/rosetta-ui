@@ -14,7 +14,7 @@ import { RelancerButton } from "@/components/detail/RelancerButton"
 import { OutputsTab } from "@/components/detail/OutputsTab"
 import { getJob } from "@/lib/api"
 import { formatDate, truncate } from "@/lib/utils"
-import { ArrowLeft, Network } from "lucide-react"
+import { ArrowLeft, Network, TerminalSquare, LayoutGrid, FolderOpen } from "lucide-react"
 import Link from "next/link"
 
 interface PageProps {
@@ -121,27 +121,30 @@ export default function JobDetailPage({ params }: PageProps) {
         {/* Panneau droit — terminal + heatmap + outputs */}
         <div className={isOutputs ? "md:col-span-3" : "md:col-span-2"}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-            <TabsList className="bg-slate-900 border border-slate-800">
+            <TabsList className="bg-transparent border-b border-slate-800 rounded-none h-auto p-0 gap-0">
               <TabsTrigger
                 value="terminal"
-                className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400"
+                className="flex items-center gap-1.5 rounded-none border-b-2 border-transparent px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 transition-colors data-[state=active]:border-orange-500 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none"
               >
+                <TerminalSquare className="h-3.5 w-3.5" />
                 Terminal
               </TabsTrigger>
               {showHeatmap && (
                 <TabsTrigger
                   value="heatmap"
-                  className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400"
+                  className="flex items-center gap-1.5 rounded-none border-b-2 border-transparent px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 transition-colors data-[state=active]:border-orange-500 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                 >
-                  Heatmap ({job.result!.files.length} fichiers)
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                  Carte de risque ({job.result!.files.length} fichiers)
                 </TabsTrigger>
               )}
               {showOutputs && (
                 <TabsTrigger
                   value="outputs"
-                  className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400"
+                  className="flex items-center gap-1.5 rounded-none border-b-2 border-transparent px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 transition-colors data-[state=active]:border-orange-500 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                 >
-                  Outputs
+                  <FolderOpen className="h-3.5 w-3.5" />
+                  Fichiers de sortie
                 </TabsTrigger>
               )}
             </TabsList>
