@@ -30,7 +30,6 @@ interface BatchCaptureModalProps {
 
 export function BatchCaptureModal({ tokens, context, onClose }: BatchCaptureModalProps) {
   const queryClient = useQueryClient()
-  const today = new Date().toISOString().slice(0, 10)
 
   const [rows, setRows] = useState<TokenRow[]>(() =>
     tokens.map(t => ({
@@ -71,7 +70,7 @@ export function BatchCaptureModal({ tokens, context, onClose }: BatchCaptureModa
             label: row.label.trim(),
             domain: row.domain,
             notes: row.notes.trim() || undefined,
-            source: `Rosetta Cockpit — lot ${today}`,
+            source: `Rosetta Cockpit — lot ${new Date().toISOString().slice(0, 10)}`,
             confiance: "medium",
           })
           patch(idx, { status: "success" })

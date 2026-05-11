@@ -16,8 +16,7 @@ export default function KBPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [editEntry, setEditEntry] = useState<KBEntry | null>(null)
-  // ?code=TOKEN — pré-remplit le formulaire de capture (depuis LiveMetricsPanel)
-  const [defaultCode, setDefaultCode] = useState<string | undefined>(() => searchParams.get("code") ?? undefined)
+  const [defaultCode, setDefaultCode] = useState<string | undefined>(undefined)
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["kb-stats"],
@@ -42,13 +41,14 @@ export default function KBPage() {
   }, [searchParams, entries, router])
 
   // ?code=TOKEN — pré-remplit la capture (depuis LiveMetricsPanel tokens)
+  // useEffect = côté client uniquement → pas de mismatch hydratation
   useEffect(() => {
     const code = searchParams.get("code")
     if (code) {
       setDefaultCode(code)
       router.replace("/kb", { scroll: false })
     }
-  }, [searchParams, router])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex flex-col gap-8">
