@@ -8,6 +8,7 @@ import { Play, Folder, Settings2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -92,6 +93,7 @@ export function JobLauncher() {
             <Settings2 className="h-4 w-4 text-blue-400" />
             Lancer un audit
           </DialogTitle>
+          <DialogDescription className="sr-only">Configurer et soumettre un nouveau job d'analyse PHP</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 mt-2">

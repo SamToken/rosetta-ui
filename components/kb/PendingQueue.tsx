@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -109,6 +110,7 @@ export function PendingQueue({ items }: PendingQueueProps) {
             <DialogTitle className="text-slate-100">
               Valider — {selected?.code}
             </DialogTitle>
+            <DialogDescription className="sr-only">Valider et enrichir cette entrée KB en attente de confirmation PO</DialogDescription>
           </DialogHeader>
 
           {selected && (

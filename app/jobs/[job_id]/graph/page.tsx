@@ -7,6 +7,8 @@ import ReactFlow, {
   Background,
   Controls,
   MiniMap,
+  ReactFlowProvider,
+  useReactFlow,
   type Node,
   type Edge,
   useNodesState,
@@ -15,7 +17,7 @@ import ReactFlow, {
   MarkerType,
 } from "reactflow"
 import "reactflow/dist/style.css"
-import { ArrowLeft, X } from "lucide-react"
+import { ArrowLeft, Maximize2, X, ZoomIn, ZoomOut } from "lucide-react"
 import { getJobDependencies } from "@/lib/api"
 import type { DepNode } from "@/lib/types"
 

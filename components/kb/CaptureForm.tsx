@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { captureCode } from "@/lib/api"
+import { captureCode, getKBDomains } from "@/lib/api"
 import type { CaptureRequest, KBEntry } from "@/lib/types"
 
 const INITIAL: CaptureRequest = {
@@ -21,15 +21,24 @@ const INITIAL: CaptureRequest = {
 interface CaptureFormProps {
   editEntry?: KBEntry | null
   onClearEdit?: () => void
+  defaultCode?: string
 }
 
-export function CaptureForm({ editEntry, onClearEdit }: CaptureFormProps) {
-  const [form, setForm] = useState<CaptureRequest>(INITIAL)
+export function CaptureForm({ editEntry, onClearEdit, defaultCode }: CaptureFormProps) {
+  const [form, setForm] = useState<CaptureRequest>(() =>
+    defaultCode ? { ...INITIAL, code: defaultCode } : INITIAL
+  )
   const [success, setSuccess] = useState<string | null>(null)
   const formRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
 
   const isEditMode = editEntry != null
+
+  const { data: domains } = useQuery({
+    queryKey: ["kb-domains"],
+    queryFn: getKBDomains,
+    staleTime: 60_000,
+  })
 
   const canSuggestHigh =
     isEditMode &&
@@ -50,12 +59,18 @@ export function CaptureForm({ editEntry, onClearEdit }: CaptureFormProps) {
         force: true,
       })
       setSuccess(null)
-      // Scroll vers le formulaire
       formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
     } else {
-      setForm(INITIAL)
+      setForm(defaultCode ? { ...INITIAL, code: defaultCode } : INITIAL)
     }
-  }, [editEntry])
+  }, [editEntry]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scroll vers le formulaire quand un code est pré-rempli depuis l'extérieur
+  useEffect(() => {
+    if (defaultCode && !editEntry) {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }, [defaultCode, editEntry])
 
   const mutation = useMutation({
     mutationFn: captureCode,
@@ -146,9 +161,13 @@ export function CaptureForm({ editEntry, onClearEdit }: CaptureFormProps) {
               <input
                 required
                 placeholder="commun"
+                list="kb-domains-list"
                 className={inputClass}
                 {...field("domain")}
               />
+              <datalist id="kb-domains-list">
+                {(domains ?? []).map(d => <option key={d} value={d} />)}
+              </datalist>
             </Field>
           </div>
 

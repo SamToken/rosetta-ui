@@ -16,6 +16,8 @@ export default function KBPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [editEntry, setEditEntry] = useState<KBEntry | null>(null)
+  // ?code=TOKEN — pré-remplit le formulaire de capture (depuis LiveMetricsPanel)
+  const [defaultCode, setDefaultCode] = useState<string | undefined>(() => searchParams.get("code") ?? undefined)
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["kb-stats"],
@@ -35,10 +37,18 @@ export default function KBPage() {
     const found = entries.find(e => e.code === code)
     if (found) {
       setEditEntry(found)
-      // Nettoyer l'URL sans recharger
       router.replace("/kb", { scroll: false })
     }
   }, [searchParams, entries, router])
+
+  // ?code=TOKEN — pré-remplit la capture (depuis LiveMetricsPanel tokens)
+  useEffect(() => {
+    const code = searchParams.get("code")
+    if (code) {
+      setDefaultCode(code)
+      router.replace("/kb", { scroll: false })
+    }
+  }, [searchParams, router])
 
   return (
     <div className="flex flex-col gap-8">
@@ -76,7 +86,11 @@ export default function KBPage() {
         <KBEntriesTable onEdit={setEditEntry} />
       </div>
 
-      <CaptureForm editEntry={editEntry} onClearEdit={() => setEditEntry(null)} />
+      <CaptureForm
+        editEntry={editEntry}
+        onClearEdit={() => setEditEntry(null)}
+        defaultCode={defaultCode}
+      />
     </div>
   )
 }

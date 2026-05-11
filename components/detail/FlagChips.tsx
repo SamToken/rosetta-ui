@@ -7,6 +7,7 @@ import { BookPlus } from "lucide-react"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -130,6 +131,7 @@ function FlagCaptureDialog({ flagType, count, context, onClose }: FlagCaptureDia
             <BookPlus className="h-4 w-4 text-blue-400" />
             Capturer dans le KB
           </DialogTitle>
+          <DialogDescription className="sr-only">Formulaire de capture d'un token dans le KB Rosetta</DialogDescription>
           <p className="text-xs text-slate-500 mt-1">
             Flag <span className="font-mono text-blue-400">{flagType}</span> · {count}× dans {context}
           </p>

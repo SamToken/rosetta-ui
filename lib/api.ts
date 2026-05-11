@@ -80,6 +80,10 @@ export async function getKBStats(): Promise<KBStats> {
   return apiFetch<KBStats>("/kb/stats")
 }
 
+export async function getKBDomains(): Promise<string[]> {
+  return apiFetch<string[]>("/kb/domains")
+}
+
 export async function getKBEntries(): Promise<KBEntry[]> {
   return apiFetch<KBEntry[]>("/kb/entries")
 }
@@ -127,4 +131,22 @@ export async function getJobFile(jobId: string, path: string): Promise<string> {
   )
   if (!res.ok) throw new ApiError(res.status, await res.text())
   return res.text()
+}
+
+export async function exportJobHuman(jobId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/audit/${jobId}/export/human`)
+  if (!res.ok) throw new ApiError(res.status, await res.text())
+  const text = await res.text()
+  const cd = res.headers.get("Content-Disposition") ?? ""
+  const match = cd.match(/filename="([^"]+)"/)
+  const filename = match?.[1] ?? `fusion_kb_${jobId.slice(0, 8)}.md`
+  const blob = new Blob([text], { type: "text/markdown;charset=utf-8" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }

@@ -19,7 +19,7 @@ import {
 import {
   ChevronUp, ChevronDown, ChevronsUpDown,
   Network, CalendarSearch, X, Trash2,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, Filter,
 } from "lucide-react"
 import {
   Tooltip,
@@ -100,7 +100,8 @@ export function JobsTable({ jobs, onRowClick }: JobsTableProps) {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
-  const [confirmIds, setConfirmIds] = useState<string[] | null>(null) // IDs en attente de confirm
+  const [confirmIds, setConfirmIds] = useState<string[] | null>(null)
+  const [jobFilter, setJobFilter] = useState<"all" | "critique" | "no_llm" | "with_llm">("all")
 
   function applyDateFilter(from: string, to: string) {
     setColumnFilters(prev => {
@@ -123,6 +124,19 @@ export function JobsTable({ jobs, onRowClick }: JobsTableProps) {
       setConfirmIds(null)
     },
   })
+
+  const filteredJobs = useMemo(() => {
+    if (jobFilter === "all") return jobs
+    return jobs.filter(j => {
+      if (jobFilter === "critique") {
+        const s = j.result?.health_score
+        return s != null && s < 40
+      }
+      if (jobFilter === "no_llm")   return j.result?.files.every(f => f.status === "no_llm") ?? false
+      if (jobFilter === "with_llm") return j.result?.files.some(f => f.status !== "no_llm") ?? false
+      return true
+    })
+  }, [jobs, jobFilter])
 
   const columns = useMemo<ColumnDef<Job>[]>(() => [
     {
@@ -298,7 +312,7 @@ export function JobsTable({ jobs, onRowClick }: JobsTableProps) {
   ], [])
 
   const table = useReactTable({
-    data: jobs,
+    data: filteredJobs,
     columns,
     state: { sorting, columnFilters, rowSelection },
     onSortingChange: setSorting,
@@ -324,6 +338,30 @@ export function JobsTable({ jobs, onRowClick }: JobsTableProps) {
     <div className="rounded-md border border-slate-800 overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center gap-3 px-3 py-2.5 border-b border-slate-800 bg-slate-900/50 flex-wrap">
+        {/* Filtres rapides */}
+        <div className="flex items-center gap-1">
+          <Filter className="h-3 w-3 text-slate-600 shrink-0 mr-0.5" />
+          {([
+            { key: "all",      label: "Tous" },
+            { key: "critique", label: "🔴 Rouges" },
+            { key: "no_llm",   label: "Sans LLM" },
+            { key: "with_llm", label: "Avec LLM" },
+          ] as const).map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setJobFilter(key)}
+              className={cn(
+                "px-2.5 py-1 rounded text-xs font-medium transition-colors border",
+                jobFilter === key
+                  ? "bg-slate-700 text-slate-100 border-slate-600"
+                  : "text-slate-500 border-transparent hover:text-slate-300"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="w-px h-4 bg-slate-700 shrink-0" />
         <CalendarSearch className="h-3.5 w-3.5 text-slate-500 shrink-0" />
         <div className="flex items-center gap-2">
           <input type="datetime-local" value={dateFrom}
