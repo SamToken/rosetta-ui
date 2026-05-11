@@ -41,40 +41,33 @@ function RiskBadge({ score }: { score: number }) {
   return <span className="text-[10px] text-red-500/70 font-medium">Critique</span>
 }
 
+const MAX_VISIBLE = 5
+
 function FilesCell({ job }: { job: Job }) {
   const paths = job.result?.php_paths ?? []
   const names = paths.map(p => p.split("/").pop() ?? p)
   if (names.length === 0) return <span className="text-slate-600">—</span>
 
-  if (names.length === 1) {
-    return (
-      <Tooltip>
-        <TooltipTrigger className="text-left">
-          <span className="font-mono text-xs text-slate-300 truncate max-w-[160px] block">
-            {names[0]}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-slate-200 text-xs font-mono max-w-xs break-all">
-          {paths[0]}
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
-
-  const preview = names.slice(0, 2).join(", ")
-  const rest = names.slice(2)
+  const visible = names.slice(0, MAX_VISIBLE)
+  const hidden = names.slice(MAX_VISIBLE)
 
   return (
     <Tooltip>
       <TooltipTrigger className="text-left">
-        <span className="font-mono text-xs text-slate-300 block max-w-[180px] truncate">
-          {preview}
-          {rest.length > 0 && <span className="text-slate-500"> +{rest.length}</span>}
-        </span>
+        <div className="flex flex-col gap-0.5">
+          {visible.map((n, i) => (
+            <span key={i} className="font-mono text-xs text-slate-300 leading-tight">
+              {n}
+            </span>
+          ))}
+          {hidden.length > 0 && (
+            <span className="text-xs text-slate-500 italic">+{hidden.length} fichier{hidden.length > 1 ? "s" : ""}</span>
+          )}
+        </div>
       </TooltipTrigger>
-      <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-slate-200 text-xs font-mono max-w-xs">
+      <TooltipContent side="right" className="bg-slate-800 border-slate-700 text-slate-200 text-xs font-mono max-w-sm">
         <ul className="flex flex-col gap-0.5">
-          {names.map((n, i) => <li key={i}>{n}</li>)}
+          {paths.map((p, i) => <li key={i} className="break-all">{p}</li>)}
         </ul>
       </TooltipContent>
     </Tooltip>
