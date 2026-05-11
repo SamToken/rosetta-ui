@@ -419,7 +419,6 @@ export function JobsTable({ jobs, onRowClick }: JobsTableProps) {
               <ChevronLeft className="h-3.5 w-3.5" />
             </button>
             {Array.from({ length: Math.min(pageCount, 7) }, (_, i) => {
-              const page = pageCount <= 7 ? i : i // simplified: show all if ≤7
               return (
                 <button key={i} onClick={() => table.setPageIndex(i)}
                   className={cn(
