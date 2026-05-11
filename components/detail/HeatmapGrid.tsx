@@ -52,13 +52,13 @@ export function HeatmapGrid({ files }: HeatmapGridProps) {
                 className="flex flex-col items-start gap-1 rounded p-3 text-left transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 style={{ backgroundColor: bg }}
               >
-                <span className="w-full text-xs font-semibold text-black/80 break-words leading-tight">
+                <span className="w-full text-xs font-semibold text-white break-words leading-tight drop-shadow-sm">
                   {name}
                 </span>
-                <span className="text-[11px] text-black/70">
+                <span className="text-[11px] text-white/80">
                   {file.flags_total} flags
                 </span>
-                <span className="text-[11px] text-black/60">
+                <span className="text-[11px] text-white/70">
                   {formatLines(file.file_size_lines)} L
                 </span>
               </TooltipTrigger>
