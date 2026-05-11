@@ -33,11 +33,11 @@ export function JobLauncher() {
   const [useLlm, setUseLlm] = useState(true)
   const [maxWorkers, setMaxWorkers] = useState(4)
 
-  // Charge le dernier chemin utilisé au premier ouverture
+  // Recharge depuis localStorage à chaque ouverture du dialog
   useEffect(() => {
-    if (open && !path) {
+    if (open) {
       const saved = localStorage.getItem(LS_KEY)
-      if (saved) setPath(saved)
+      setPath(saved ?? "")
     }
   }, [open])
 
@@ -86,7 +86,7 @@ export function JobLauncher() {
         Nouvel audit
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-lg bg-slate-900 border-slate-700 text-slate-100">
+      <DialogContent className="sm:max-w-xl bg-slate-900 border-slate-700 text-slate-100">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-slate-100">
             <Settings2 className="h-4 w-4 text-blue-400" />
@@ -104,20 +104,29 @@ export function JobLauncher() {
               </Label>
               {/* Presets */}
               <div className="flex gap-1">
-                {PRESETS.map((p) => (
-                  <button
-                    key={p.label}
-                    type="button"
-                    onClick={() => setPath(p.path)}
-                    className={`text-xs px-2 py-0.5 rounded border transition-colors ${
-                      path === p.path
-                        ? "border-blue-500 bg-blue-600/20 text-blue-300"
-                        : "border-slate-700 text-slate-500 hover:border-slate-500 hover:text-slate-300"
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
+                {PRESETS.map((p) => {
+                  const lines = path.split('\n').map(l => l.trim())
+                  const active = lines.includes(p.path)
+                  return (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => setPath(prev => {
+                        const trimmed = prev.trim()
+                        if (!trimmed) return p.path
+                        if (trimmed.split('\n').map(l => l.trim()).includes(p.path)) return prev
+                        return trimmed + '\n' + p.path
+                      })}
+                      className={`text-xs px-2 py-0.5 rounded border transition-colors ${
+                        active
+                          ? "border-blue-500 bg-blue-600/20 text-blue-300"
+                          : "border-slate-700 text-slate-500 hover:border-slate-500 hover:text-slate-300"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
             <textarea
@@ -125,8 +134,8 @@ export function JobLauncher() {
               value={path}
               onChange={(e) => setPath(e.target.value)}
               placeholder={"/mnt/c/…/RetablirCloturerController.php\n/mnt/c/…/RetablirCloturerIhmService.php\n/mnt/c/…/RetablirCloturerForm.php"}
-              rows={4}
-              className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+              rows={8}
+              className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[120px]"
               autoComplete="off"
               spellCheck={false}
             />
