@@ -254,7 +254,8 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
   }
 
   const filtered = (entries ?? [])
-    .filter(e => e.section !== "observations")  // observations : stockage uniquement
+    .filter(e => e.section !== "observations")
+    .filter(e => filterType === "bugs_connus" ? e.section === "bugs_connus" : e.section !== "bugs_connus")
     .filter(e => {
       if (filterConfiance !== "all" && e.confiance !== filterConfiance) return false
       if (filterType !== "all" && e.section !== filterType) return false

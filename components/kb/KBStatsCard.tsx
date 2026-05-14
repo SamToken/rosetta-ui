@@ -27,7 +27,6 @@ export function KBStatsCard({ stats }: KBStatsCardProps) {
           <StatRow label="Codes métier"   value={stats.codes} />
           <StatRow label="Règles métier"  value={stats.regles_metier ?? 0} />
           <StatRow label="Bugs connus"    value={stats.bugs_connus   ?? 0} />
-          <StatRow label="Observations"   value={stats.observations  ?? 0} />
           {(stats.regles ?? 0) > 0 && (
             <StatRow label="Règles (non migrées)" value={stats.regles} />
           )}
