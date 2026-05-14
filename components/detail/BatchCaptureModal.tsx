@@ -113,7 +113,7 @@ export function BatchCaptureModal({ tokens, context, onClose }: BatchCaptureModa
         </div>
 
         {/* Column headers */}
-        <div className="grid grid-cols-[28px_140px_1fr_120px] gap-x-3 px-5 py-2 border-b border-slate-800/60 text-[10px] uppercase tracking-wide text-slate-600">
+        <div className="grid grid-cols-[28px_200px_1fr_120px] gap-x-3 px-5 py-2 border-b border-slate-800/60 text-[10px] uppercase tracking-wide text-slate-600">
           <div />
           <div>Token</div>
           <div>Label métier *</div>
@@ -126,7 +126,7 @@ export function BatchCaptureModal({ tokens, context, onClose }: BatchCaptureModa
             <div
               key={row.code}
               className={cn(
-                "grid grid-cols-[28px_140px_1fr_120px] gap-x-3 items-center px-5 py-2.5",
+                "grid grid-cols-[28px_200px_1fr_120px] gap-x-3 items-center px-5 py-2.5",
                 row.status === "success" && "opacity-50"
               )}
             >
