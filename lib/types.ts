@@ -92,6 +92,7 @@ export type KBStats = {
   inferred: number
   pending_total: number
   pending_high: number
+  pending_po: number      // regles_metier avec confiance != high
 }
 
 export type PendingItem = {

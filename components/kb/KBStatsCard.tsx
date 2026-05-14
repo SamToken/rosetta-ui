@@ -47,9 +47,9 @@ export function KBStatsCard({ stats }: KBStatsCardProps) {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm text-slate-300">Confiance</CardTitle>
-            {stats.pending_total > 0 && (
+            {(stats.pending_po ?? 0) > 0 && (
               <Badge className="bg-red-900 text-red-200 border-red-700 border text-xs">
-                {stats.pending_total} en attente
+                {stats.pending_po} à valider PO
               </Badge>
             )}
           </div>
