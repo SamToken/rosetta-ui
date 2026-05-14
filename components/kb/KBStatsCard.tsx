@@ -24,8 +24,13 @@ export function KBStatsCard({ stats }: KBStatsCardProps) {
           <CardTitle className="text-sm text-slate-300">Inventaire KB</CardTitle>
         </CardHeader>
         <CardContent>
-          <StatRow label="Codes métier" value={stats.codes} />
-          <StatRow label="Règles" value={stats.regles} />
+          <StatRow label="Codes métier"   value={stats.codes} />
+          <StatRow label="Règles métier"  value={stats.regles_metier ?? 0} />
+          <StatRow label="Bugs connus"    value={stats.bugs_connus   ?? 0} />
+          <StatRow label="Observations"   value={stats.observations  ?? 0} />
+          {(stats.regles ?? 0) > 0 && (
+            <StatRow label="Règles (non migrées)" value={stats.regles} />
+          )}
           <StatRow label="Colonnes Oracle" value={stats.colonnes} />
           <StatRow label="Vues Oracle" value={stats.vues} />
           <StatRow label="Requêtes" value={stats.requetes} />

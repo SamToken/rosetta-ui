@@ -18,18 +18,34 @@ interface KBEntriesTableProps {
 }
 
 const SECTION_LABELS: Record<string, string> = {
-  "codes": "Code",
-  "regles": "Règle",
+  "codes":                  "Code",
+  "regles":                 "Règle",          // rétrocompat
+  "regles_metier":          "Règle métier",
+  "bugs_connus":            "Bug connu",
+  "observations":           "Observation",
   "sql_artifacts.colonnes": "Colonne",
-  "sql_artifacts.vues": "Vue",
+  "sql_artifacts.vues":     "Vue",
   "sql_artifacts.requetes": "Requête",
-  "relations": "Relation",
+  "relations":              "Relation",
+}
+
+const SECTION_BADGE_COLORS: Record<string, string> = {
+  "codes":                  "bg-slate-700/40 text-slate-400 border-slate-700",
+  "regles":                 "bg-blue-900/30 text-blue-400 border-blue-700/40",
+  "regles_metier":          "bg-blue-900/30 text-blue-400 border-blue-700/40",
+  "bugs_connus":            "bg-red-900/30 text-red-400 border-red-700/40",
+  "observations":           "bg-slate-700/40 text-slate-400 border-slate-700",
+  "sql_artifacts.colonnes": "bg-amber-900/30 text-amber-400 border-amber-700/40",
+  "sql_artifacts.vues":     "bg-purple-900/30 text-purple-400 border-purple-700/40",
+  "sql_artifacts.requetes": "bg-teal-900/30 text-teal-400 border-teal-700/40",
+  "relations":              "bg-indigo-900/30 text-indigo-400 border-indigo-700/40",
 }
 
 const TYPE_FILTER_OPTIONS = [
   { value: "all",                    label: "Tous" },
   { value: "codes",                  label: "Code" },
-  { value: "regles",                 label: "Règle" },
+  { value: "regles_metier",          label: "Règle métier" },
+  { value: "bugs_connus",            label: "Bug connu" },
   { value: "relations",              label: "Relation" },
   { value: "sql_artifacts.colonnes", label: "Colonne" },
   { value: "sql_artifacts.vues",     label: "Vue" },
@@ -226,6 +242,7 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
   }
 
   const filtered = (entries ?? [])
+    .filter(e => e.section !== "observations")  // observations : stockage uniquement
     .filter(e => {
       if (filterConfiance !== "all" && e.confiance !== filterConfiance) return false
       if (filterType !== "all" && e.section !== filterType) return false
@@ -381,8 +398,8 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
                       <td className="px-3 py-2.5">
                         <div className="flex flex-col gap-0.5">
                           <span className={cn(
-                            "text-xs",
-                            isRelation ? "text-blue-400 font-medium" : "text-slate-500"
+                            "text-[10px] px-1.5 py-0.5 rounded border font-medium",
+                            SECTION_BADGE_COLORS[entry.section] ?? "bg-slate-700/40 text-slate-400 border-slate-700"
                           )}>
                             {SECTION_LABELS[entry.section] ?? entry.section}
                           </span>

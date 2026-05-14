@@ -77,7 +77,10 @@ export type KBStats = {
   last_updated: string
   maintainer: string
   codes: number
-  regles: number
+  regles: number           // rétrocompat — entrées non migrées
+  regles_metier: number
+  bugs_connus: number
+  observations: number
   schema_entries: number
   colonnes: number
   vues: number
