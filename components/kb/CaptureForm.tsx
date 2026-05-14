@@ -7,6 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { captureCode, getKBDomains } from "@/lib/api"
+
+const BASE_DOMAINS = [
+  "commun", "ticketing", "sla", "diagnostic", "interco",
+  "aircom", "airele", "orchestra", "scenario", "enrichissement-alarmes",
+  "oceane", "referentiel", "supervision", "automatisation", "variables",
+]
 import type { CaptureRequest, KBEntry } from "@/lib/types"
 
 const INITIAL: CaptureRequest = {
@@ -158,16 +164,11 @@ export function CaptureForm({ editEntry, onClearEdit, defaultCode }: CaptureForm
               />
             </Field>
             <Field label="Domaine *">
-              <input
-                required
-                placeholder="commun"
-                list="kb-domains-list"
-                className={inputClass}
-                {...field("domain")}
-              />
-              <datalist id="kb-domains-list">
-                {(domains ?? []).map(d => <option key={d} value={d} />)}
-              </datalist>
+              <select required className={inputClass} {...field("domain")}>
+                {[...new Set([...BASE_DOMAINS, ...(domains ?? [])])].sort().map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
             </Field>
           </div>
 
