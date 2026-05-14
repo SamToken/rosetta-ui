@@ -7,6 +7,12 @@ import { Button } from "@/components/ui/button"
 import { captureCode, getKBDomains } from "@/lib/api"
 import { cn } from "@/lib/utils"
 
+const BASE_DOMAINS = [
+  "commun", "ticketing", "sla", "diagnostic", "interco",
+  "aircom", "airele", "orchestra", "scenario", "enrichissement-alarmes",
+  "oceane", "referentiel", "supervision", "automatisation", "variables",
+]
+
 interface EnrichToken {
   code: string
   count: number
@@ -116,7 +122,9 @@ export function BatchCaptureModal({ tokens, context, onClose }: BatchCaptureModa
 
         {/* Datalist domaines (partagé par toutes les lignes) */}
         <datalist id="batch-domains-list">
-          {(domains ?? []).map(d => <option key={d} value={d} />)}
+          {[...new Set([...BASE_DOMAINS, ...(domains ?? [])])].sort().map(d => (
+            <option key={d} value={d} />
+          ))}
         </datalist>
 
         {/* Rows */}
