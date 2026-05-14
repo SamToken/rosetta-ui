@@ -214,7 +214,7 @@ export default function JobDetailPage({ params }: PageProps) {
 
   const launchMutation = useMutation({
     mutationFn: (paths: string[]) =>
-      startAudit({ php_paths: paths, no_llm: false, max_workers: Math.min(paths.length, 4) }),
+      startAudit({ php_paths: paths, no_llm: false, bug_check: true, max_workers: Math.min(paths.length, 4) }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] })
       toast.success("Job LLM lancé", { description: `${llmModal?.paths.length} fichier(s) en analyse` })
