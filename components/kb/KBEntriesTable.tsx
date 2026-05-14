@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChevronDown, ChevronUp, Search, Trash2 } from "lucide-react"
-import { deleteKBEntry, getKBEntries } from "@/lib/api"
+import { deleteKBEntry, getKBEntries, updateKBConfiance, validateRelation } from "@/lib/api"
 import type { KBEntry, TrouveRef } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import {
@@ -73,7 +73,18 @@ function RelationDetailDialog({
   entry: KBEntry | null
   onClose: () => void
 }) {
+  const queryClient = useQueryClient()
   const refs: TrouveRef[] = entry?.trouve_dans ?? []
+
+  const validateMutation = useMutation({
+    mutationFn: () => validateRelation(
+      entry!.relation_from!, entry!.relation_to!, entry!.relation_kind!
+    ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kb-entries"] })
+      onClose()
+    },
+  })
 
   // relation_to peut contenir "via → cible" généré par le LLM — splitter pour l'affichage
   const toParts = entry?.relation_to?.includes("→")
@@ -146,6 +157,23 @@ function RelationDetailDialog({
             {refs.length === 0 && (
               <p className="text-xs text-slate-600 italic">Aucune référence de code disponible.</p>
             )}
+
+            {/* Valider → high */}
+            {entry && entry.confiance !== "high" && (
+              <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                <span className="text-xs text-slate-500">Confiance actuelle : <span className="text-yellow-400">{entry.confiance}</span></span>
+                <button
+                  disabled={validateMutation.isPending}
+                  onClick={() => validateMutation.mutate()}
+                  className="text-xs px-3 py-1.5 rounded bg-green-700 hover:bg-green-600 text-white transition-colors disabled:opacity-50"
+                >
+                  {validateMutation.isPending ? "Validation…" : "✓ Valider → high"}
+                </button>
+              </div>
+            )}
+            {validateMutation.isError && (
+              <p className="text-xs text-red-400">{(validateMutation.error as Error).message}</p>
+            )}
           </div>
         )}
       </DialogContent>
@@ -172,6 +200,17 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
       queryClient.invalidateQueries({ queryKey: ["kb-entries"] })
       queryClient.invalidateQueries({ queryKey: ["kb-stats"] })
       setConfirmDelete(null)
+    },
+  })
+
+  const [promotingCode, setPromotingCode] = useState<string | null>(null)
+  const promoteMutation = useMutation({
+    mutationFn: (entry: KBEntry) => updateKBConfiance(entry.code, entry.section, "high"),
+    onMutate: (entry) => setPromotingCode(entry.code),
+    onSettled: () => setPromotingCode(null),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kb-entries"] })
+      queryClient.invalidateQueries({ queryKey: ["kb-stats"] })
     },
   })
 
@@ -390,6 +429,16 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
                           >
                             {isRelation ? "Détail →" : "Enrichir →"}
                           </button>
+                          {!isRelation && entry.confiance !== "high" && (
+                            <button
+                              disabled={promotingCode === entry.code}
+                              onClick={() => promoteMutation.mutate(entry)}
+                              title="Valider → high"
+                              className="text-xs text-green-600 hover:text-green-400 transition-colors disabled:opacity-40 whitespace-nowrap"
+                            >
+                              {promotingCode === entry.code ? "…" : "↑ high"}
+                            </button>
+                          )}
                           {!isRelation && (
                             <button
                               onClick={() => setConfirmDelete(entry)}

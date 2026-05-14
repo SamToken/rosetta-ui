@@ -97,6 +97,22 @@ export async function deleteKBEntry(code: string, section: string): Promise<void
   })
 }
 
+export async function updateKBConfiance(code: string, section: string, confiance: string): Promise<void> {
+  await apiFetch<unknown>(`/kb/${encodeURIComponent(code)}/confiance?section=${encodeURIComponent(section)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ confiance }),
+  })
+}
+
+export async function validateRelation(
+  relation_from: string, relation_to: string, relation_kind: string, confiance = "high"
+): Promise<void> {
+  await apiFetch<unknown>("/kb/relation/validate", {
+    method: "PATCH",
+    body: JSON.stringify({ relation_from, relation_to, relation_kind, confiance }),
+  })
+}
+
 export async function getKBPending(): Promise<PendingItem[]> {
   return apiFetch<PendingItem[]>("/kb/pending")
 }
