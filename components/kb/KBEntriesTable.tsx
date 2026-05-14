@@ -93,16 +93,16 @@ function RelationDetailDialog({
         {entry && (
           <div className="flex flex-col gap-4 text-sm">
             {/* from → [via →] to */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-blue-300 font-semibold">{entry.relation_from}</span>
-              <span className="text-slate-500">→</span>
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <span className="font-mono text-blue-300 font-semibold break-all">{entry.relation_from}</span>
+              <span className="text-slate-500 shrink-0">→</span>
               {relVia && (
                 <>
-                  <span className="font-mono text-amber-300 font-semibold">{relVia}</span>
-                  <span className="text-slate-500">→</span>
+                  <span className="font-mono text-amber-300 font-semibold break-all">{relVia}</span>
+                  <span className="text-slate-500 shrink-0">→</span>
                 </>
               )}
-              <span className="font-mono text-teal-300 font-semibold">{relTo}</span>
+              <span className="font-mono text-teal-300 font-semibold break-all">{relTo}</span>
             </div>
 
             {/* kind + direction */}
@@ -129,7 +129,7 @@ function RelationDetailDialog({
                 </p>
                 <ul className="flex flex-col gap-1">
                   {refs.map((ref, i) => (
-                    <li key={i} className="text-xs font-mono text-slate-300 bg-slate-800 rounded px-2 py-1">
+                    <li key={i} className="text-xs font-mono text-slate-300 bg-slate-800 rounded px-2 py-1 break-all">
                       <span className="text-slate-400">{ref.fichier}</span>
                       {ref.methode && (
                         <span className="text-blue-400"> ::{ref.methode}</span>
