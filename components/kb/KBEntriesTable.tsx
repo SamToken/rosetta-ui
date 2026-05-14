@@ -74,9 +74,17 @@ function RelationDetailDialog({
   onClose: () => void
 }) {
   const refs: TrouveRef[] = entry?.trouve_dans ?? []
+
+  // relation_to peut contenir "via → cible" généré par le LLM — splitter pour l'affichage
+  const toParts = entry?.relation_to?.includes("→")
+    ? entry.relation_to.split("→").map(s => s.trim())
+    : null
+  const relVia = toParts ? toParts[0] : null
+  const relTo  = toParts ? toParts[toParts.length - 1] : entry?.relation_to
+
   return (
     <Dialog open={!!entry} onOpenChange={open => { if (!open) onClose() }}>
-      <DialogContent className="bg-slate-900 border-slate-700 text-slate-100 max-w-lg">
+      <DialogContent className="bg-slate-900 border-slate-700 text-slate-100 max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-slate-100 text-sm font-semibold">
             Relation sémantique
@@ -84,11 +92,17 @@ function RelationDetailDialog({
         </DialogHeader>
         {entry && (
           <div className="flex flex-col gap-4 text-sm">
-            {/* from → to */}
+            {/* from → [via →] to */}
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-mono text-blue-300 font-semibold">{entry.relation_from}</span>
               <span className="text-slate-500">→</span>
-              <span className="font-mono text-teal-300 font-semibold">{entry.relation_to}</span>
+              {relVia && (
+                <>
+                  <span className="font-mono text-amber-300 font-semibold">{relVia}</span>
+                  <span className="text-slate-500">→</span>
+                </>
+              )}
+              <span className="font-mono text-teal-300 font-semibold">{relTo}</span>
             </div>
 
             {/* kind + direction */}

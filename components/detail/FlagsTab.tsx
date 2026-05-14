@@ -181,7 +181,7 @@ function MethodGroup({ method, flags }: { method: string; flags: FlagOut[] }) {
       </button>
       {open && (
         <div className="p-2 flex flex-col gap-1.5">
-          {flags.map(flag => <FlagRow key={flag.id || flag.fragment} flag={flag} />)}
+          {flags.map((flag, i) => <FlagRow key={flag.id || `${flag.fragment}-${i}`} flag={flag} />)}
         </div>
       )}
     </div>
