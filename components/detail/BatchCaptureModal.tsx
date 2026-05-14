@@ -120,13 +120,6 @@ export function BatchCaptureModal({ tokens, context, onClose }: BatchCaptureModa
           <div>Domaine</div>
         </div>
 
-        {/* Datalist domaines (partagé par toutes les lignes) */}
-        <datalist id="batch-domains-list">
-          {[...new Set([...BASE_DOMAINS, ...(domains ?? [])])].sort().map(d => (
-            <option key={d} value={d} />
-          ))}
-        </datalist>
-
         {/* Rows */}
         <div className="overflow-y-auto flex-1 divide-y divide-slate-800/40">
           {rows.map((row, idx) => (
@@ -165,14 +158,16 @@ export function BatchCaptureModal({ tokens, context, onClose }: BatchCaptureModa
               />
 
               {/* Domain */}
-              <input
-                list="batch-domains-list"
+              <select
                 disabled={row.status !== "idle"}
                 value={row.domain}
                 onChange={e => patch(idx, { domain: e.target.value })}
-                placeholder="domaine…"
-                className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
-              />
+                className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {[...new Set([...BASE_DOMAINS, ...(domains ?? [])])].sort().map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
             </div>
           ))}
         </div>
