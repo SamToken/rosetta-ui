@@ -91,6 +91,12 @@ export async function getKBEntries(): Promise<KBEntry[]> {
   return apiFetch<KBEntry[]>("/kb/entries")
 }
 
+export async function deleteKBEntry(code: string, section: string): Promise<void> {
+  await apiFetch<unknown>(`/kb/${encodeURIComponent(code)}?section=${encodeURIComponent(section)}`, {
+    method: "DELETE",
+  })
+}
+
 export async function getKBPending(): Promise<PendingItem[]> {
   return apiFetch<PendingItem[]>("/kb/pending")
 }

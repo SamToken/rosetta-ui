@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { ChevronDown, ChevronUp, Search } from "lucide-react"
-import { getKBEntries } from "@/lib/api"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { ChevronDown, ChevronUp, Search, Trash2 } from "lucide-react"
+import { deleteKBEntry, getKBEntries } from "@/lib/api"
 import type { KBEntry, TrouveRef } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import {
@@ -162,6 +162,18 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
   const [filterConfiance, setFilterConfiance] = useState<string>("all")
   const [filterType, setFilterType]       = useState<string>("all")
   const [selectedRelation, setSelectedRelation] = useState<KBEntry | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<KBEntry | null>(null)
+
+  const queryClient = useQueryClient()
+
+  const deleteMutation = useMutation({
+    mutationFn: (entry: KBEntry) => deleteKBEntry(entry.code, entry.section),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kb-entries"] })
+      queryClient.invalidateQueries({ queryKey: ["kb-stats"] })
+      setConfirmDelete(null)
+    },
+  })
 
   const { data: entries, isLoading } = useQuery({
     queryKey: ["kb-entries"],
@@ -371,17 +383,23 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
 
                       {/* Action */}
                       <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => isRelation ? setSelectedRelation(entry) : onEdit(entry)}
-                          className={cn(
-                            "text-xs hover:underline transition-colors whitespace-nowrap",
-                            isRelation
-                              ? "text-blue-400 hover:text-blue-300"
-                              : "text-blue-400 hover:text-blue-300"
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => isRelation ? setSelectedRelation(entry) : onEdit(entry)}
+                            className="text-xs text-blue-400 hover:text-blue-300 hover:underline transition-colors whitespace-nowrap"
+                          >
+                            {isRelation ? "Détail →" : "Enrichir →"}
+                          </button>
+                          {!isRelation && (
+                            <button
+                              onClick={() => setConfirmDelete(entry)}
+                              className="text-slate-600 hover:text-red-400 transition-colors"
+                              title="Supprimer cette entrée"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
                           )}
-                        >
-                          {isRelation ? "Détail →" : "Enrichir →"}
-                        </button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -397,6 +415,37 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
         entry={selectedRelation}
         onClose={() => setSelectedRelation(null)}
       />
+
+      {/* Confirmation suppression */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+            <p className="text-slate-100 font-semibold text-sm">Supprimer cette entrée ?</p>
+            <p className="text-xs text-slate-400">
+              <span className="font-mono text-blue-300">{confirmDelete.code}</span>
+              {" "}sera retiré définitivement du KB. Action irréversible.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="px-3 py-1.5 text-xs rounded border border-slate-700 text-slate-400 hover:bg-slate-800 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate(confirmDelete)}
+                className="px-3 py-1.5 text-xs rounded bg-red-600 hover:bg-red-500 text-white transition-colors disabled:opacity-50"
+              >
+                {deleteMutation.isPending ? "Suppression…" : "Supprimer"}
+              </button>
+            </div>
+            {deleteMutation.isError && (
+              <p className="text-xs text-red-400">{(deleteMutation.error as Error).message}</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
