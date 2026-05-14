@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Activity, BookOpen, LayoutDashboard, ListChecks } from "lucide-react"
+import { Activity, BookOpen, LayoutDashboard, ListChecks, Radar } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const NAV_ITEMS = [
-  { href: "/jobs", label: "Jobs", icon: ListChecks },
-  { href: "/roi", label: "ROI", icon: Activity },
-  { href: "/kb", label: "KB", icon: BookOpen },
+  { href: "/jobs",       label: "Jobs",       icon: ListChecks },
+  { href: "/roi",        label: "ROI",        icon: Activity },
+  { href: "/kb",         label: "KB",         icon: BookOpen },
+  { href: "/impact",     label: "Impact",     icon: Radar },
   { href: "/kb/pending", label: "Pending PO", icon: LayoutDashboard },
 ]
 

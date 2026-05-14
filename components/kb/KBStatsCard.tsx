@@ -29,6 +29,7 @@ export function KBStatsCard({ stats }: KBStatsCardProps) {
           <StatRow label="Colonnes Oracle" value={stats.colonnes} />
           <StatRow label="Vues Oracle" value={stats.vues} />
           <StatRow label="Requêtes" value={stats.requetes} />
+          <StatRow label="Relations" value={stats.relations ?? 0} />
           <div className="mt-3 flex items-center justify-between">
             <span className="text-sm font-semibold text-slate-300">Total</span>
             <span className="text-lg font-bold text-white tabular-nums">{stats.total}</span>

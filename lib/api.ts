@@ -3,6 +3,9 @@ import type {
   CaptureRequest,
   CaptureResponse,
   DependencyGraph,
+  FlagOut,
+  ImpactIndex,
+  ImpactToken,
   Job,
   JobCreatedResponse,
   KBEntry,
@@ -119,6 +122,25 @@ export async function deleteJob(jobId: string): Promise<void> {
   await apiFetch<void>(`/audit/${jobId}`, { method: "DELETE" })
 }
 
+// ── Impact cross-fichier ───────────────────────────────────────────────────
+
+export async function getImpactTokens(params?: {
+  search?: string
+  minOccurrences?: number
+  maxTokens?: number
+}): Promise<ImpactIndex> {
+  const p = new URLSearchParams()
+  if (params?.search)          p.set("search", params.search)
+  if (params?.minOccurrences)  p.set("min_occurrences", String(params.minOccurrences))
+  if (params?.maxTokens)       p.set("max_tokens", String(params.maxTokens))
+  const qs = p.size > 0 ? `?${p}` : ""
+  return apiFetch<ImpactIndex>(`/impact/tokens${qs}`)
+}
+
+export async function getImpactToken(token: string): Promise<ImpactToken> {
+  return apiFetch<ImpactToken>(`/impact/tokens/${encodeURIComponent(token)}`)
+}
+
 // ── Job outputs ─────────────────────────────────────────────────────────────
 
 export async function getJobFiles(jobId: string): Promise<OutputFile[]> {
@@ -131,6 +153,10 @@ export async function getJobFile(jobId: string, path: string): Promise<string> {
   )
   if (!res.ok) throw new ApiError(res.status, await res.text())
   return res.text()
+}
+
+export async function getJobFlags(jobId: string): Promise<FlagOut[]> {
+  return apiFetch<FlagOut[]>(`/audit/${jobId}/flags`)
 }
 
 export async function exportJobHuman(jobId: string): Promise<void> {

@@ -34,6 +34,28 @@ export type Job = {
   result: AuditJobResult | null
   logs: string[]
   error: string | null
+  has_dashboard?: boolean
+}
+
+export type ImpactOccurrence = {
+  fichier: string
+  methode: string
+  ligne: number | null
+  source: string
+}
+
+export type ImpactToken = {
+  total_occurrences: number
+  distinct_files: number
+  kb_known: boolean
+  sources: string[]
+  occurrences: ImpactOccurrence[]
+}
+
+export type ImpactIndex = {
+  ir_count: number
+  token_count: number
+  tokens: Record<string, ImpactToken>
 }
 
 export type ROISummary = {
@@ -60,6 +82,7 @@ export type KBStats = {
   colonnes: number
   vues: number
   requetes: number
+  relations: number
   total: number
   high: number
   medium: number
@@ -124,6 +147,12 @@ export type OutputFile = {
   path: string
 }
 
+export type TrouveRef = {
+  fichier: string
+  methode?: string
+  ligne?: number
+}
+
 export type KBEntry = {
   code: string
   label: string
@@ -134,6 +163,12 @@ export type KBEntry = {
   source: string
   pending_questions: number
   lie_a: string[]
+  // Champs présents uniquement pour section === "relations"
+  relation_kind?: string
+  relation_from?: string
+  relation_to?: string
+  relation_direction?: string
+  trouve_dans?: TrouveRef[]
 }
 
 export type JobCreatedResponse = {
@@ -171,4 +206,27 @@ export type AuditStartRequest = {
   call_graph_root?: string
   contexte?: string
   max_workers?: number
+}
+
+export type RecipeOut = {
+  id: string
+  title: string
+  effort: string
+  zend_pattern: string
+  symfony_equivalent: string
+  diff_before: string
+  diff_after: string
+  migration_notes: string
+}
+
+export type FlagOut = {
+  id: string
+  type: string
+  fragment: string
+  location: string
+  source_line: number | null
+  method_name: string | null
+  question: string
+  impact_category: string
+  recipe: RecipeOut | null
 }

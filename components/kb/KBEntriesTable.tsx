@@ -4,8 +4,14 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { ChevronDown, ChevronUp, Search } from "lucide-react"
 import { getKBEntries } from "@/lib/api"
-import type { KBEntry } from "@/lib/types"
+import type { KBEntry, TrouveRef } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface KBEntriesTableProps {
   onEdit: (entry: KBEntry) => void
@@ -17,12 +23,30 @@ const SECTION_LABELS: Record<string, string> = {
   "sql_artifacts.colonnes": "Colonne",
   "sql_artifacts.vues": "Vue",
   "sql_artifacts.requetes": "Requête",
+  "relations": "Relation",
+}
+
+const TYPE_FILTER_OPTIONS = [
+  { value: "all",                    label: "Tous" },
+  { value: "codes",                  label: "Code" },
+  { value: "regles",                 label: "Règle" },
+  { value: "relations",              label: "Relation" },
+  { value: "sql_artifacts.colonnes", label: "Colonne" },
+  { value: "sql_artifacts.vues",     label: "Vue" },
+  { value: "sql_artifacts.requetes", label: "Requête" },
+]
+
+const KIND_STYLES: Record<string, string> = {
+  implies:        "bg-blue-900/30 text-blue-400 border-blue-700/40",
+  synonym_of:     "bg-purple-900/30 text-purple-400 border-purple-700/40",
+  transitions_to: "bg-teal-900/30 text-teal-400 border-teal-700/40",
+  requires:       "bg-amber-900/30 text-amber-400 border-amber-700/40",
 }
 
 function ConfidenceBadge({ confiance }: { confiance: KBEntry["confiance"] }) {
   const cfg = {
-    high: "bg-green-500/15 text-green-400 border-green-500/30",
-    medium: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+    high:     "bg-green-500/15 text-green-400 border-green-500/30",
+    medium:   "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
     inferred: "bg-slate-700/50 text-slate-400 border-slate-600/30",
   }[confiance]
   const label = { high: "🟢 high", medium: "🟡 medium", inferred: "⚪ inferred" }[confiance]
@@ -33,13 +57,97 @@ function ConfidenceBadge({ confiance }: { confiance: KBEntry["confiance"] }) {
   )
 }
 
+function KindBadge({ kind }: { kind: string }) {
+  const cls = KIND_STYLES[kind] ?? "bg-slate-700/30 text-slate-400 border-slate-600/30"
+  return (
+    <span className={cn("text-xs px-1.5 py-0.5 rounded border font-medium mt-0.5 inline-block", cls)}>
+      {kind}
+    </span>
+  )
+}
+
+function RelationDetailDialog({
+  entry,
+  onClose,
+}: {
+  entry: KBEntry | null
+  onClose: () => void
+}) {
+  const refs: TrouveRef[] = entry?.trouve_dans ?? []
+  return (
+    <Dialog open={!!entry} onOpenChange={open => { if (!open) onClose() }}>
+      <DialogContent className="bg-slate-900 border-slate-700 text-slate-100 max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="text-slate-100 text-sm font-semibold">
+            Relation sémantique
+          </DialogTitle>
+        </DialogHeader>
+        {entry && (
+          <div className="flex flex-col gap-4 text-sm">
+            {/* from → to */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-mono text-blue-300 font-semibold">{entry.relation_from}</span>
+              <span className="text-slate-500">→</span>
+              <span className="font-mono text-teal-300 font-semibold">{entry.relation_to}</span>
+            </div>
+
+            {/* kind + direction */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {entry.relation_kind && <KindBadge kind={entry.relation_kind} />}
+              {entry.relation_direction && (
+                <span className="text-xs text-slate-500">{entry.relation_direction}</span>
+              )}
+              {entry.domaine && entry.domaine !== "—" && (
+                <span className="text-xs text-slate-500">· {entry.domaine}</span>
+              )}
+            </div>
+
+            {/* sémantique */}
+            {entry.notes && (
+              <p className="text-slate-400 text-xs leading-relaxed">{entry.notes}</p>
+            )}
+
+            {/* trouvé dans */}
+            {refs.length > 0 && (
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1.5">
+                  Trouvé dans
+                </p>
+                <ul className="flex flex-col gap-1">
+                  {refs.map((ref, i) => (
+                    <li key={i} className="text-xs font-mono text-slate-300 bg-slate-800 rounded px-2 py-1">
+                      <span className="text-slate-400">{ref.fichier}</span>
+                      {ref.methode && (
+                        <span className="text-blue-400"> ::{ref.methode}</span>
+                      )}
+                      {ref.ligne != null && (
+                        <span className="text-slate-500"> :{ref.ligne}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {refs.length === 0 && (
+              <p className="text-xs text-slate-600 italic">Aucune référence de code disponible.</p>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 type SortKey = "code" | "domaine" | "confiance" | "pending_questions"
 
 export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
-  const [search, setSearch] = useState("")
-  const [sortKey, setSortKey] = useState<SortKey>("confiance")
-  const [sortAsc, setSortAsc] = useState(true)
+  const [search, setSearch]               = useState("")
+  const [sortKey, setSortKey]             = useState<SortKey>("confiance")
+  const [sortAsc, setSortAsc]             = useState(true)
   const [filterConfiance, setFilterConfiance] = useState<string>("all")
+  const [filterType, setFilterType]       = useState<string>("all")
+  const [selectedRelation, setSelectedRelation] = useState<KBEntry | null>(null)
 
   const { data: entries, isLoading } = useQuery({
     queryKey: ["kb-entries"],
@@ -55,11 +163,16 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
   const filtered = (entries ?? [])
     .filter(e => {
       if (filterConfiance !== "all" && e.confiance !== filterConfiance) return false
+      if (filterType !== "all" && e.section !== filterType) return false
       if (!search) return true
       const q = search.toLowerCase()
-      return e.code.toLowerCase().includes(q) ||
+      return (
+        e.code.toLowerCase().includes(q) ||
         e.label.toLowerCase().includes(q) ||
-        e.domaine.toLowerCase().includes(q)
+        e.domaine.toLowerCase().includes(q) ||
+        (e.relation_from ?? "").toLowerCase().includes(q) ||
+        (e.relation_to ?? "").toLowerCase().includes(q)
+      )
     })
     .sort((a, b) => {
       const order = { high: 0, medium: 1, inferred: 2 }
@@ -102,6 +215,8 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
             className="w-full rounded-md border border-slate-700 bg-slate-800 pl-8 pr-3 py-1.5 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
           />
         </div>
+
+        {/* Filtre confiance */}
         <div className="flex items-center gap-1">
           {(["all", "high", "medium", "inferred"] as const).map(v => (
             <button
@@ -118,6 +233,18 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
             </button>
           ))}
         </div>
+
+        {/* Filtre type */}
+        <select
+          value={filterType}
+          onChange={e => setFilterType(e.target.value)}
+          className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-600"
+        >
+          {TYPE_FILTER_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+
         <span className="text-xs text-slate-600 tabular-nums">
           {filtered.length}/{entries?.length ?? 0} entrées
         </span>
@@ -156,59 +283,106 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-3 py-8 text-center text-slate-600 text-xs">
-                    {search || filterConfiance !== "all" ? "Aucun résultat" : "KB vide"}
+                    {search || filterConfiance !== "all" || filterType !== "all"
+                      ? "Aucun résultat"
+                      : "KB vide"}
                   </td>
                 </tr>
               ) : (
-                filtered.map(entry => (
-                  <tr
-                    key={`${entry.section}::${entry.code}`}
-                    className="border-b border-slate-800/60 hover:bg-slate-800/30 transition-colors cursor-pointer"
-                    onClick={() => onEdit(entry)}
-                  >
-                    <td className="px-3 py-2.5">
-                      <span className="font-mono text-xs text-slate-200 font-semibold">
-                        {entry.code}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <span className="text-xs text-slate-500">
-                        {SECTION_LABELS[entry.section] ?? entry.section}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-xs text-slate-400">
-                      {entry.domaine}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <ConfidenceBadge confiance={entry.confiance} />
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      {entry.pending_questions > 0 ? (
-                        <span className="text-xs bg-orange-500/15 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-medium">
-                          {entry.pending_questions} ❓
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-700">—</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2.5 text-xs text-slate-400 max-w-48 truncate">
-                      {entry.label}
-                    </td>
-                    <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>
-                      <button
-                        onClick={() => onEdit(entry)}
-                        className="text-xs text-blue-400 hover:text-blue-300 hover:underline transition-colors whitespace-nowrap"
-                      >
-                        Enrichir →
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                filtered.map(entry => {
+                  const isRelation = entry.section === "relations"
+                  return (
+                    <tr
+                      key={`${entry.section}::${entry.code}`}
+                      className="border-b border-slate-800/60 hover:bg-slate-800/30 transition-colors cursor-pointer"
+                      onClick={() => isRelation ? setSelectedRelation(entry) : onEdit(entry)}
+                    >
+                      {/* Code */}
+                      <td className="px-3 py-2.5">
+                        {isRelation ? (
+                          <span className="font-mono text-xs text-slate-200">
+                            <span className="text-blue-300 font-semibold">{entry.relation_from}</span>
+                            <span className="text-slate-500 mx-1">→</span>
+                            <span className="text-teal-300 font-semibold">{entry.relation_to}</span>
+                          </span>
+                        ) : (
+                          <span className="font-mono text-xs text-slate-200 font-semibold">
+                            {entry.code}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Type */}
+                      <td className="px-3 py-2.5">
+                        <div className="flex flex-col gap-0.5">
+                          <span className={cn(
+                            "text-xs",
+                            isRelation ? "text-blue-400 font-medium" : "text-slate-500"
+                          )}>
+                            {SECTION_LABELS[entry.section] ?? entry.section}
+                          </span>
+                          {isRelation && entry.relation_kind && (
+                            <KindBadge kind={entry.relation_kind} />
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Domaine */}
+                      <td className="px-3 py-2.5 text-xs text-slate-400">
+                        {entry.domaine}
+                      </td>
+
+                      {/* Confiance */}
+                      <td className="px-3 py-2.5">
+                        <ConfidenceBadge confiance={entry.confiance} />
+                      </td>
+
+                      {/* Questions PO */}
+                      <td className="px-3 py-2.5 text-center">
+                        {!isRelation && entry.pending_questions > 0 ? (
+                          <span className="text-xs bg-orange-500/15 text-orange-400 border border-orange-500/30 px-1.5 py-0.5 rounded font-medium">
+                            {entry.pending_questions} ❓
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-700">—</span>
+                        )}
+                      </td>
+
+                      {/* Label */}
+                      <td className="px-3 py-2.5 text-xs text-slate-400 max-w-48 truncate">
+                        {isRelation
+                          ? (entry.notes || entry.label)
+                          : entry.label}
+                      </td>
+
+                      {/* Action */}
+                      <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={() => isRelation ? setSelectedRelation(entry) : onEdit(entry)}
+                          className={cn(
+                            "text-xs hover:underline transition-colors whitespace-nowrap",
+                            isRelation
+                              ? "text-blue-400 hover:text-blue-300"
+                              : "text-blue-400 hover:text-blue-300"
+                          )}
+                        >
+                          {isRelation ? "Détail →" : "Enrichir →"}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Dialog détail relation */}
+      <RelationDetailDialog
+        entry={selectedRelation}
+        onClose={() => setSelectedRelation(null)}
+      />
     </div>
   )
 }

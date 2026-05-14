@@ -14,11 +14,12 @@ import { HeatmapGrid } from "@/components/detail/HeatmapGrid"
 import { RelancerButton } from "@/components/detail/RelancerButton"
 import { LiveMetricsPanel } from "@/components/detail/LiveMetricsPanel"
 import { OutputsTab } from "@/components/detail/OutputsTab"
+import { FlagsTab } from "@/components/detail/FlagsTab"
 import { BatchCaptureModal } from "@/components/detail/BatchCaptureModal"
 import { getJob, exportJobHuman, startAudit } from "@/lib/api"
 import { formatDate, truncate, flagsColor } from "@/lib/utils"
 import { cn } from "@/lib/utils"
-import { ArrowLeft, Network, TerminalSquare, LayoutGrid, FolderOpen, BookOpen, Sparkles, DatabaseZap } from "lucide-react"
+import { ArrowLeft, Network, TerminalSquare, LayoutGrid, FolderOpen, BookOpen, Sparkles, DatabaseZap, BarChart2, Flag } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import type { FileSummary } from "@/lib/types"
@@ -290,6 +291,17 @@ export default function JobDetailPage({ params }: PageProps) {
               Graphe
             </Link>
           )}
+          {job.status === "success" && job.result && (
+            <a
+              href={`/api/audit/${job_id}/dashboard`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs text-blue-400 border border-blue-700/50 rounded px-2.5 py-1.5 hover:bg-blue-500/10 hover:text-blue-300 transition-colors"
+            >
+              <BarChart2 className="h-3.5 w-3.5" />
+              Dashboard
+            </a>
+          )}
           {job.status === "success" && enrichTokens.length > 0 && (
             <Button
               variant="outline"
@@ -388,6 +400,12 @@ export default function JobDetailPage({ params }: PageProps) {
                   Fichiers de sortie
                 </TabsTrigger>
               )}
+              {showOutputs && (
+                <TabsTrigger value="flags" className="flex items-center gap-1.5 rounded-none border-b-2 border-transparent px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 transition-colors data-[state=active]:border-orange-500 data-[state=active]:text-white data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+                  <Flag className="h-3.5 w-3.5" />
+                  Flags & Recettes
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="terminal" className="mt-3">
@@ -407,6 +425,12 @@ export default function JobDetailPage({ params }: PageProps) {
             {showOutputs && (
               <TabsContent value="outputs" className="mt-3">
                 <OutputsTab jobId={job_id} result={job.result!} />
+              </TabsContent>
+            )}
+
+            {showOutputs && (
+              <TabsContent value="flags" className="mt-3">
+                <FlagsTab jobId={job_id} />
               </TabsContent>
             )}
           </Tabs>

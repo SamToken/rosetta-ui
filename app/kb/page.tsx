@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -12,9 +12,43 @@ import { CaptureForm } from "@/components/kb/CaptureForm"
 import { getKBStats, getKBEntries } from "@/lib/api"
 import type { KBEntry } from "@/lib/types"
 
-export default function KBPage() {
+// Composant enfant isolé pour contenir useSearchParams (requis par Next.js)
+function KBSearchParamsHandler({
+  entries,
+  onEditEntry,
+  onSetDefaultCode,
+}: {
+  entries: KBEntry[] | undefined
+  onEditEntry: (entry: KBEntry) => void
+  onSetDefaultCode: (code: string) => void
+}) {
   const searchParams = useSearchParams()
   const router = useRouter()
+
+  // ?enrich=CODE — navigué depuis la page Pending PO
+  useEffect(() => {
+    const code = searchParams.get("enrich")
+    if (!code || !entries) return
+    const found = entries.find(e => e.code === code)
+    if (found) {
+      onEditEntry(found)
+      router.replace("/kb", { scroll: false })
+    }
+  }, [searchParams, entries, router, onEditEntry])
+
+  // ?code=TOKEN — pré-remplit la capture (depuis LiveMetricsPanel tokens)
+  useEffect(() => {
+    const code = searchParams.get("code")
+    if (code) {
+      onSetDefaultCode(code)
+      router.replace("/kb", { scroll: false })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return null
+}
+
+export default function KBPage() {
   const [editEntry, setEditEntry] = useState<KBEntry | null>(null)
   const [defaultCode, setDefaultCode] = useState<string | undefined>(undefined)
 
@@ -29,30 +63,17 @@ export default function KBPage() {
     staleTime: 30_000,
   })
 
-  // ?enrich=CODE — navigué depuis la page Pending PO
-  useEffect(() => {
-    const code = searchParams.get("enrich")
-    if (!code || !entries) return
-    const found = entries.find(e => e.code === code)
-    if (found) {
-      setEditEntry(found)
-      router.replace("/kb", { scroll: false })
-    }
-  }, [searchParams, entries, router])
-
-  // ?code=TOKEN — pré-remplit la capture (depuis LiveMetricsPanel tokens)
-  // useEffect = côté client uniquement → pas de mismatch hydratation
-  useEffect(() => {
-    const code = searchParams.get("code")
-    if (code) {
-      setDefaultCode(code)
-      router.replace("/kb", { scroll: false })
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-xl font-semibold text-slate-100">Knowledge Base</h1>
+
+      <Suspense fallback={null}>
+        <KBSearchParamsHandler
+          entries={entries}
+          onEditEntry={setEditEntry}
+          onSetDefaultCode={setDefaultCode}
+        />
+      </Suspense>
 
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
