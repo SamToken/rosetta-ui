@@ -144,7 +144,7 @@ export function BatchCaptureModal({ tokens, context, onClose }: BatchCaptureModa
 
               {/* Code + count */}
               <div className="min-w-0">
-                <p className="font-mono text-xs font-semibold text-blue-300 truncate">{row.code}</p>
+                <p className="font-mono text-xs font-semibold text-blue-300 truncate" title={row.code}>{row.code}</p>
                 <p className="text-[10px] text-slate-600">{row.count}× détecté</p>
               </div>
 
