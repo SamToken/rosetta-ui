@@ -104,6 +104,19 @@ export async function updateKBConfiance(code: string, section: string, confiance
   })
 }
 
+export async function getKBIndex(): Promise<Record<string, string>> {
+  return apiFetch<Record<string, string>>("/kb/index")
+}
+
+export async function reclassifyKBEntry(
+  code: string, fromSection: string, toSection: string,
+): Promise<void> {
+  await apiFetch<unknown>(`/kb/${encodeURIComponent(code)}/reclassify`, {
+    method: "PATCH",
+    body: JSON.stringify({ from_section: fromSection, to_section: toSection }),
+  })
+}
+
 export async function validateRelation(
   relation_from: string, relation_to: string, relation_kind: string, confiance = "high"
 ): Promise<void> {

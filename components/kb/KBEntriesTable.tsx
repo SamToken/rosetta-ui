@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChevronDown, ChevronUp, Search, Trash2 } from "lucide-react"
-import { deleteKBEntry, getKBEntries, updateKBConfiance, validateRelation } from "@/lib/api"
+import { deleteKBEntry, getKBEntries, reclassifyKBEntry, updateKBConfiance, validateRelation } from "@/lib/api"
 import type { KBEntry, TrouveRef } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import {
@@ -230,6 +230,18 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
     },
   })
 
+  const [reclassifyingCode, setReclassifyingCode] = useState<string | null>(null)
+  const reclassifyMutation = useMutation({
+    mutationFn: ({ code, from, to }: { code: string; from: string; to: string }) =>
+      reclassifyKBEntry(code, from, to),
+    onMutate: ({ code }) => setReclassifyingCode(code),
+    onSettled: () => setReclassifyingCode(null),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kb-entries"] })
+      queryClient.invalidateQueries({ queryKey: ["kb-stats"] })
+    },
+  })
+
   const { data: entries, isLoading } = useQuery({
     queryKey: ["kb-entries"],
     queryFn: getKBEntries,
@@ -395,14 +407,37 @@ export function KBEntriesTable({ onEdit }: KBEntriesTableProps) {
                       </td>
 
                       {/* Type */}
-                      <td className="px-3 py-2.5">
+                      <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>
                         <div className="flex flex-col gap-0.5">
-                          <span className={cn(
-                            "text-[10px] px-1.5 py-0.5 rounded border font-medium",
-                            SECTION_BADGE_COLORS[entry.section] ?? "bg-slate-700/40 text-slate-400 border-slate-700"
-                          )}>
-                            {SECTION_LABELS[entry.section] ?? entry.section}
-                          </span>
+                          {["codes", "regles_metier", "bugs_connus"].includes(entry.section) ? (
+                            <select
+                              value={entry.section}
+                              disabled={reclassifyingCode === entry.code}
+                              onChange={e => {
+                                const to = e.target.value
+                                if (to !== entry.section) {
+                                  reclassifyMutation.mutate({ code: entry.code, from: entry.section, to })
+                                }
+                              }}
+                              className={cn(
+                                "text-[10px] px-1 py-0.5 rounded border font-medium cursor-pointer",
+                                "bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-600",
+                                SECTION_BADGE_COLORS[entry.section] ?? "text-slate-400 border-slate-700",
+                                reclassifyingCode === entry.code && "opacity-50"
+                              )}
+                            >
+                              <option value="codes">Code</option>
+                              <option value="regles_metier">Règle métier</option>
+                              <option value="bugs_connus">Bug connu</option>
+                            </select>
+                          ) : (
+                            <span className={cn(
+                              "text-[10px] px-1.5 py-0.5 rounded border font-medium",
+                              SECTION_BADGE_COLORS[entry.section] ?? "bg-slate-700/40 text-slate-400 border-slate-700"
+                            )}>
+                              {SECTION_LABELS[entry.section] ?? entry.section}
+                            </span>
+                          )}
                           {isRelation && entry.relation_kind && (
                             <KindBadge kind={entry.relation_kind} />
                           )}

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { ChevronDown, ChevronRight, AlertTriangle, Zap, BookmarkPlus, X } from "lucide-react"
-import { getJobFlags, captureCode, getKBDomains } from "@/lib/api"
+import { getJobFlags, captureCode, getKBDomains, getKBIndex, reclassifyKBEntry } from "@/lib/api"
 import type { CaptureRequest, FlagOut, RecipeOut } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -266,9 +266,20 @@ function FlagCaptureModal({ flag, onClose }: { flag: FlagOut; onClose: () => voi
 
 // ── Flag row ──────────────────────────────────────────────────────────────
 
-function FlagRow({ flag, onCapture }: { flag: FlagOut; onCapture: (f: FlagOut) => void }) {
+function FlagRow({
+  flag,
+  onCapture,
+  kbSection,
+  onReclassify,
+}: {
+  flag: FlagOut
+  onCapture: (f: FlagOut) => void
+  kbSection?: string
+  onReclassify: (code: string, from: string, to: string) => void
+}) {
   const [open, setOpen] = useState(false)
   const hasDetails = flag.question || flag.recipe || flag.fragment
+  const canReclassify = kbSection === "bugs_connus" && !!flag.fragment
 
   return (
     <div className={cn(
@@ -303,6 +314,24 @@ function FlagRow({ flag, onCapture }: { flag: FlagOut; onCapture: (f: FlagOut) =
           )}
         </button>
 
+        {/* Reclassify dropdown — only for flags already in KB as bugs_connus */}
+        {canReclassify && (
+          <select
+            defaultValue="bugs_connus"
+            title="Reclasser cette entrée KB"
+            onClick={e => e.stopPropagation()}
+            onChange={e => {
+              const to = e.target.value
+              if (to !== "bugs_connus") onReclassify(flag.fragment!, "bugs_connus", to)
+            }}
+            className="shrink-0 mt-0.5 text-[10px] rounded border border-red-700/40 bg-red-900/20 text-red-400 px-1 py-0.5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-600"
+          >
+            <option value="bugs_connus">Bug connu</option>
+            <option value="observations">→ Observation</option>
+            <option value="regles_metier">→ Règle métier</option>
+          </select>
+        )}
+
         {/* Capture button — outside the expand button */}
         <button
           type="button"
@@ -328,10 +357,18 @@ function FlagRow({ flag, onCapture }: { flag: FlagOut; onCapture: (f: FlagOut) =
 
 // ── Group by method ───────────────────────────────────────────────────────
 
-function MethodGroup({ method, flags, onCapture }: {
+function MethodGroup({
+  method,
+  flags,
+  onCapture,
+  kbIndex,
+  onReclassify,
+}: {
   method: string
   flags: FlagOut[]
   onCapture: (f: FlagOut) => void
+  kbIndex: Record<string, string> | undefined
+  onReclassify: (code: string, from: string, to: string) => void
 }) {
   const [open, setOpen] = useState(true)
   const withRecipe = flags.filter(f => f.recipe).length
@@ -356,6 +393,8 @@ function MethodGroup({ method, flags, onCapture }: {
               key={`${flag.id || flag.fragment}-${i}`}
               flag={flag}
               onCapture={onCapture}
+              kbSection={flag.fragment ? kbIndex?.[flag.fragment] : undefined}
+              onReclassify={onReclassify}
             />
           ))}
         </div>
@@ -368,11 +407,28 @@ function MethodGroup({ method, flags, onCapture }: {
 
 export function FlagsTab({ jobId }: { jobId: string }) {
   const [captureFlag, setCaptureFlag] = useState<FlagOut | null>(null)
+  const queryClient = useQueryClient()
 
   const { data: flags, isLoading } = useQuery({
     queryKey: ["job-flags", jobId],
     queryFn: () => getJobFlags(jobId),
     staleTime: 300_000,
+  })
+
+  const { data: kbIndex } = useQuery({
+    queryKey: ["kb-index"],
+    queryFn: getKBIndex,
+    staleTime: 60_000,
+  })
+
+  const reclassifyMutation = useMutation({
+    mutationFn: ({ code, from, to }: { code: string; from: string; to: string }) =>
+      reclassifyKBEntry(code, from, to),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kb-index"] })
+      queryClient.invalidateQueries({ queryKey: ["kb-entries"] })
+      queryClient.invalidateQueries({ queryKey: ["kb-stats"] })
+    },
   })
 
   if (isLoading) {
@@ -422,6 +478,8 @@ export function FlagsTab({ jobId }: { jobId: string }) {
               method={method}
               flags={mflags}
               onCapture={setCaptureFlag}
+              kbIndex={kbIndex}
+              onReclassify={(code, from, to) => reclassifyMutation.mutate({ code, from, to })}
             />
           ))}
         </div>
